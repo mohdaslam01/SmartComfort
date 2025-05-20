@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV Data Viewer</title>
+    <style>
+        body { font-family: Arial; background-color: #fff; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        a { display: inline-block; margin-top: 20px; text-decoration: none; color: blue; }
+    </style>
+</head>
+<body>
+    <h1>📄 Logged Sensor Data</h1>
+    <table id="csvTable"></table>
+
+    <a href="index.html">🔙 Back to Live Page</a>
+    <br><br>
+<a href="http://10.202.14.3:5000/download-csv" download>
+    📥 Download Full CSV Log
+</a>
+
+    <script>
+        fetch("http://10.202.14.3:5000/csv-json")
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById("csvTable");
+
+                let headerRow = "<tr>";
+                data.headers.forEach(header => {
+                    headerRow += `<th>${header}</th>`;
+                });
+                headerRow += "</tr>";
+                table.innerHTML += headerRow;
+
+                data.rows.forEach(row => {
+                    let rowHTML = "<tr>";
+                    row.forEach(cell => {
+                        rowHTML += `<td>${cell}</td>`;
+                    });
+                    rowHTML += "</tr>";
+                    table.innerHTML += rowHTML;
+                });
+            })
+            .catch(err => {
+                document.body.innerHTML += `<p style="color:red;">Error loading CSV: ${err}</p>`;
+            });
+    </script>
+</body>
+</html>
