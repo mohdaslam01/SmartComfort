@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Sensor Data</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        h1 { color: #333; }
+        .sensor { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔴 Live Sensor Data from Raspberry Pi</h1>
+    <div id="output"></div>
+
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('http://10.202.14.3:5000/sensor-data');
+                const data = await response.json();
+
+                let html = `
+                    <div class="sensor">🕒 Time: ${data.timestamp}</div>
+                    <div class="sensor">🌡️ Temp: ${data.temperature} °C</div>
+                    <div class="sensor">💧 Humidity: ${data.humidity} %</div>
+                    <div class="sensor">🌬️ Pressure: ${data.pressure} hPa</div>
+                    <div class="sensor">🔥 Gas Resistance: ${data.gas_resistance} Ω</div>
+                    <div class="sensor">🌈 Violet: ${data.violet}</div>
+                    <div class="sensor">🔵 Blue: ${data.blue}</div>
+                    <div class="sensor">🟢 Green: ${data.green}</div>
+                    <div class="sensor">🟡 Yellow: ${data.yellow}</div>
+                    <div class="sensor">🟠 Orange: ${data.orange}</div>
+                    <div class="sensor">🔴 Red: ${data.red}</div>
+                `;
+                document.getElementById("output").innerHTML = html;
+            } catch (err) {
+                document.getElementById("output").innerHTML = `<div>Error fetching data: ${err}</div>`;
+            }
+        }
+
+        fetchData();
+        setInterval(fetchData, 10000); // Refresh every 10 seconds
+    </script>
+</body>
+</html>
