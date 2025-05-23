@@ -11,7 +11,7 @@
 </head>
 <body>
     <h1>Welcome to SmartComfort</h1>
-    <Span>
+    <span>
         <div>
             <h3>Output</h3>
             <h1>🔴 Live Sensor Data from Raspberry Pi</h1>
@@ -22,7 +22,7 @@
                     try {
                         const response = await fetch('http://10.202.14.3:5000/sensor-data');
                         const data = await response.json();
-        
+
                         let html = `
                             <div class="sensor">🕒 Time: ${data.timestamp}</div>
                             <div class="sensor">🌡️ Temp: ${data.temperature} °C</div>
@@ -35,13 +35,14 @@
                             <div class="sensor">🟡 Yellow: ${data.yellow}</div>
                             <div class="sensor">🟠 Orange: ${data.orange}</div>
                             <div class="sensor">🔴 Red: ${data.red}</div>
+                            <div class="sensor">💡 Ambient Light: ${data.lux} lux</div>
                         `;
                         document.getElementById("output").innerHTML = html;
                     } catch (err) {
                         document.getElementById("output").innerHTML = `<div>Error fetching data: ${err}</div>`;
                     }
                 }
-        
+
                 fetchData();
                 setInterval(fetchData, 10000); // Refresh every 10 seconds
             </script>
@@ -50,7 +51,6 @@
             <h3>Buttons</h3>
             <button onclick="window.location.href='csv_display.html'">📄 View CSV Data</button>
         </div>
-    </Span>
-    
+    </span>
 </body>
 </html>

@@ -16,9 +16,9 @@
 
     <a href="index.html">🔙 Back to Live Page</a>
     <br><br>
-<a href="http://10.202.14.3:5000/download-csv" download>
-    📥 Download Full CSV Log
-</a>
+    <a href="http://10.202.14.3:5000/download-csv" download>
+        📥 Download Full CSV Log
+    </a>
 
     <script>
         fetch("http://10.202.14.3:5000/csv-json")
@@ -26,6 +26,7 @@
             .then(data => {
                 const table = document.getElementById("csvTable");
 
+                // Build table header
                 let headerRow = "<tr>";
                 data.headers.forEach(header => {
                     headerRow += `<th>${header}</th>`;
@@ -33,6 +34,7 @@
                 headerRow += "</tr>";
                 table.innerHTML += headerRow;
 
+                // Populate table rows
                 data.rows.forEach(row => {
                     let rowHTML = "<tr>";
                     row.forEach(cell => {
