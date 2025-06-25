@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold Setup with Range</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #report { margin-top: 20px; color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>SmartComfort - Threshold & Range Setup</h1>
+
+    <div class="container">
+        <label>Lower Temperature (°C): <input type="number" id="lowerRange"></label>
+        <label>Higher Temperature (°C): <input type="number" id="higherRange"></label>
+        <label>Threshold (°C): <input type="number" id="threshold"></label>
+        <button onclick="startMonitoring()">Start Monitoring</button>
+    </div>
+
+    <div id="report"></div>
+
+    <script>
+        let previousAvg = null;
+        const dataPoints = [];
+
+        async function fetchTemperature() {
+            const response = await fetch('http://10.202.14.3:5000/sensor-data');
+            const data = await response.json();
+            return parseFloat(data.temperature);
+        }
+
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        async function monitor() {
+            const lower = parseFloat(document.getElementById('lowerRange').value);
+            const higher = parseFloat(document.getElementById('higherRange').value);
+            const threshold = parseFloat(document.getElementById('threshold').value);
+
+            const temp = await fetchTemperature();
+            dataPoints.push(temp);
+
+            if (dataPoints.length === 3) {
+                const currentAvg = calculateAverage(dataPoints);
+
+                if (previousAvg !== null) {
+                    const difference = Math.abs(currentAvg - previousAvg);
+
+                    if ((currentAvg < lower || currentAvg > higher) || difference >= threshold) {
+                        document.getElementById('report').innerText = `Alert: Avg Temp is ${currentAvg.toFixed(2)} °C, changed by ${difference.toFixed(2)} °C`;
+                    } else {
+                        document.getElementById('report').innerText = '';
+                    }
+                }
+
+                previousAvg = currentAvg;
+                dataPoints.length = 0; // reset for next 3-min cycle
+            }
+        }
+
+        function startMonitoring() {
+            document.getElementById('report').innerText = 'Monitoring started...';
+            setInterval(monitor, 60000); // fetch every minute
+        }
+    </script>
+</body>
+</html>
