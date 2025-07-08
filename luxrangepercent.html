@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lux Threshold Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #lightReport1, #lightReport2 { margin-top: 20px; color: green; font-weight: bold; }
+        #normalMessage { margin-top: 20px; color: blue; }
+    </style>
+</head>
+<body>
+    <h1>SmartComfort - Lux Threshold Setup</h1>
+
+    <!-- First Range and Threshold for Ambient Light -->
+    <div class="container">
+        <label>Lower Light 1 (%): <input type="number" id="lowerLight1" value="50"></label>
+        <label>Higher Light 1 (%): <input type="number" id="higherLight1" value="80"></label>
+        <label>Threshold 1 (%): <input type="number" id="thresholdLight1" value="2"></label>
+    </div>
+
+    <!-- Second Range and Threshold for Ambient Light -->
+    <div class="container">
+        <label>Lower Light 2 (%): <input type="number" id="lowerLight2" value="10"></label>
+        <label>Higher Light 2 (%): <input type="number" id="higherLight2" value="50"></label>
+        <label>Threshold 2 (%): <input type="number" id="thresholdLight2" value="3"></label>
+    </div>
+
+    <button onclick="startLuxMonitoring()">Start Monitoring Lux</button>
+
+    <!-- Output for Lux Alerts -->
+    <div id="lightReport1"></div>
+    <div id="lightReport2"></div>
+    <div id="normalMessage">No lux changes detected yet...</div>
+
+    <script>
+        let previousAvgLight1 = null;
+        let previousAvgLight2 = null;
+
+        const dataPointsLight1 = [];
+        const dataPointsLight2 = [];
+
+        async function fetchData() {
+            try {
+                const response = await fetch('http://10.202.14.3:5000/sensor-data');
+                const data = await response.json();
+                return {
+                    lux: parseFloat(data.lux)
+                };
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        async function monitorLux() {
+            const data = await fetchData();
+            if (data === null) return;
+
+            const { lux } = data;
+
+            dataPointsLight1.push(lux);
+            if (dataPointsLight1.length === 3) {
+                const currentAvgLight1 = calculateAverage(dataPointsLight1);
+                if (previousAvgLight1 !== null) {
+                    const differenceLight1 = Math.abs(currentAvgLight1 - previousAvgLight1);
+                    const lowerLight1 = parseFloat(document.getElementById('lowerLight1').value);
+                    const higherLight1 = parseFloat(document.getElementById('higherLight1').value);
+                    const thresholdLight1 = parseFloat(document.getElementById('thresholdLight1').value);
+                    const diff_in_percentage1 = (differenceLight1 / 1140.25) * 100;
+
+                    if ((((currentAvgLight1 / 1140.25) * 100) < lowerLight1 || ((currentAvgLight1 / 1140.25) * 100) > higherLight1) || diff_in_percentage1 >= thresholdLight1) {
+                        document.getElementById('lightReport1').innerText =
+                            `Alert for Range 2 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, in percent ${((currentAvgLight1.toFixed(2) / 1140.25) * 100)}, changed by ${differenceLight1.toFixed(2)} lux, ${diff_in_percentage1.toFixed(2)} %, Prev = ${previousAvgLight1.toFixed(2)}, in percent ${((previousAvgLight1.toFixed(2) / 1140.25) * 100)}`;
+                    }
+                }
+                previousAvgLight1 = currentAvgLight1;
+                dataPointsLight1.length = 0;
+            }
+
+            dataPointsLight2.push(lux);
+            if (dataPointsLight2.length === 3) {
+                const currentAvgLight2 = calculateAverage(dataPointsLight2);
+                if (previousAvgLight2 !== null) {
+                    const differenceLight2 = Math.abs(currentAvgLight2 - previousAvgLight2);
+                    const lowerLight2 = parseFloat(document.getElementById('lowerLight2').value);
+                    const higherLight2 = parseFloat(document.getElementById('higherLight2').value);
+                    const thresholdLight2 = parseFloat(document.getElementById('thresholdLight2').value);
+                    const diff_in_percentage2 = (differenceLight2 / 1140.25) * 100;
+                    
+                    if ((((currentAvgLight2 / 1140.25) * 100) < lowerLight2 || (((currentAvgLight2 / 1140.25) * 100)) > higherLight2) || diff_in_percentage2 >= thresholdLight2) {
+                        document.getElementById('lightReport2').innerText =
+                            `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, in percent ${((currentAvgLight2.toFixed(2) / 1140.25) * 100)}, changed by ${differenceLight2.toFixed(2)} lux, ${diff_in_percentage2.toFixed(2)} %, Prev = ${previousAvgLight2.toFixed(2)}, in percent ${((previousAvgLight2.toFixed(2) / 1140.25) * 100)}`;
+                    }
+                }
+                previousAvgLight2 = currentAvgLight2;
+                dataPointsLight2.length = 0;
+            }
+        }
+
+        function startLuxMonitoring() {
+            document.getElementById('lightReport1').innerText = '';
+            document.getElementById('lightReport2').innerText = '';
+            document.getElementById('normalMessage').innerText = 'Monitoring started...';
+            setInterval(monitorLux, 60000); // Every 60 seconds
+        }
+    </script>
+</body>
+</html>

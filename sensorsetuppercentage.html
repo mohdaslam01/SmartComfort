@@ -13,15 +13,15 @@
     </style>
 </head>
 <body>
-    <h1>SmartComfort</h1>
+    <h1>🛋️ SmartComfort</h1>
 
     <!-- First Range and Threshold (Existing) for Temperature -->
-     <h2>Temperature</h2>
+     <h2>🌡️ Temperature</h2>
     <div class="container">
         <label>Lower Temperature 1 (°C): <input type="number" id="lowerRange1" value="18"></label>
         <label>Higher Temperature 1 (°C): <input type="number" id="higherRange1" value="22"></label>
         <label>Threshold 1 (°C): <input type="number" id="threshold1" value="0.05"></label>
-        <button id="monitorButton" onclick="startMonitoring()">Start Monitoring</button>
+        <button id="monitorButton" onclick="startMonitoring()">🖥️Start Monitoring</button>
     </div>
 
     <!-- Second Range and Threshold (New) for Temperature -->
@@ -31,34 +31,34 @@
         <label>Threshold 2 (°C): <input type="number" id="threshold2" value="0.5"></label>
     </div>
 
-    <h2>Humidity</h2>
+    <h2>💧 Humidity</h2>
     <!-- First Range and Threshold for Humidity -->
     <div class="container">
-        <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="80"></label>
-        <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="120"></label>
+        <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="20"></label>
+        <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="40"></label>
         <label>Threshold 1 (%): <input type="number" id="thresholdHumidity1" value="5"></label>
     </div>
 
     <!-- Second Range and Threshold for Humidity -->
     <div class="container">
-        <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="100"></label>
-        <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="120"></label>
+        <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="45"></label>
+        <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="75"></label>
         <label>Threshold 2 (%): <input type="number" id="thresholdHumidity2" value="10"></label>
     </div>
 
-    <h2>Light</h2>
+    <h2>💡 Light</h2>
     <!-- First Range and Threshold for Ambient Light -->
     <div class="container">
-        <label>Lower Light 1 (%): <input type="number" id="lowerLight1" value="90"></label>
-        <label>Higher Light 1 (%): <input type="number" id="higherLight1" value="120"></label>
-        <label>Threshold 1 (%): <input type="number" id="thresholdLight1" value="5"></label>
+        <label>Lower Light 1 (%): <input type="number" id="lowerLight1" value="10"></label>
+        <label>Higher Light 1 (%): <input type="number" id="higherLight1" value="40"></label>
+        <label>Threshold 1 (%): <input type="number" id="thresholdLight1" value="2"></label>
     </div>
 
     <!-- Second Range and Threshold for Ambient Light -->
     <div class="container">
-        <label>Lower Light 2 (%): <input type="number" id="lowerLight2" value="100"></label>
-        <label>Higher Light 2 (%): <input type="number" id="higherLight2" value="120"></label>
-        <label>Threshold 2 (%): <input type="number" id="thresholdLight2" value="10"></label>
+        <label>Lower Light 2 (%): <input type="number" id="lowerLight2" value="40"></label>
+        <label>Higher Light 2 (%): <input type="number" id="higherLight2" value="80"></label>
+        <label>Threshold 2 (%): <input type="number" id="thresholdLight2" value="3"></label>
     </div>
 
     <!-- Separate Outputs for both Range 1 and Range 2 -->
@@ -191,8 +191,11 @@
                     const higherLight1 = parseFloat(document.getElementById('higherLight1').value);
                     const thresholdLight1 = parseFloat(document.getElementById('thresholdLight1').value);
 
-                    if ((currentAvgLight1 < lowerLight1 || currentAvgLight1 > higherLight1) || differenceLight1 >= thresholdLight1) {
-                        document.getElementById('lightReport1').innerText = `Alert for Range 1 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, changed by ${differenceLight1.toFixed(2)} lux`;
+                    const diff_in_percentage1 = (differenceLight1 / 1140.25) * 100;
+
+                    if ((((currentAvgLight1 / 1140.25) * 100) < lowerLight1 || ((currentAvgLight1 / 1140.25) * 100) > higherLight1) || diff_in_percentage1 >= thresholdLight1) {
+                        document.getElementById('lightReport1').innerText =
+                            `Alert for Range 1 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, in percent ${((currentAvgLight1 / 1140.25) * 100).toFixed(2)}, changed by ${differenceLight1.toFixed(2)} lux, ${diff_in_percentage1.toFixed(2)} %, Prev = ${previousAvgLight1.toFixed(2)}, in percent ${((previousAvgLight1 / 1140.25) * 100).toFixed(2)}`;
                     }
                 }
                 previousAvgLight1 = currentAvgLight1;
@@ -208,8 +211,11 @@
                     const higherLight2 = parseFloat(document.getElementById('higherLight2').value);
                     const thresholdLight2 = parseFloat(document.getElementById('thresholdLight2').value);
 
-                    if ((currentAvgLight2 < lowerLight2 || currentAvgLight2 > higherLight2) || differenceLight2 >= thresholdLight2) {
-                        document.getElementById('lightReport2').innerText = `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, changed by ${differenceLight2.toFixed(2)} lux`;
+                    const diff_in_percentage2 = (differenceLight2 / 1140.25) * 100;
+
+                    if ((((currentAvgLight2 / 1140.25) * 100) < lowerLight2 || ((currentAvgLight2 / 1140.25) * 100) > higherLight2) || diff_in_percentage2 >= thresholdLight2) {
+                        document.getElementById('lightReport2').innerText =
+                            `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, in percent ${((currentAvgLight2 / 1140.25) * 100).toFixed(2)}, changed by ${differenceLight2.toFixed(2)} lux, ${diff_in_percentage2.toFixed(2)} %, Prev = ${previousAvgLight2.toFixed(2)}, in percent ${((previousAvgLight2 / 1140.25) * 100).toFixed(2)}`;
                     }
                 }
                 previousAvgLight2 = currentAvgLight2;

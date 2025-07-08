@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold Setup with Lux Range</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #report1, #report2 { margin-top: 20px; color: green; font-weight: bold; }
+        #normalMessage { margin-top: 20px; color: green; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <h1>SmartComfort - Lux Threshold & Range Setup</h1>
+
+    <!-- First Range and Threshold (Existing) -->
+    <div class="container">
+        <label>Lower Lux 1: <input type="number" id="lowerRange1"></label>
+        <label>Higher Lux 1: <input type="number" id="higherRange1"></label>
+        <label>Threshold 1: <input type="number" id="threshold1" value="5"></label>
+        <button onclick="startMonitoring()">Start Monitoring</button>
+    </div>
+
+    <!-- Second Range and Threshold (New) -->
+    <div class="container">
+        <label>Lower Lux 2: <input type="number" id="lowerRange2"></label>
+        <label>Higher Lux 2: <input type="number" id="higherRange2"></label>
+        <label>Threshold 2: <input type="number" id="threshold2" value="5"></label>
+    </div>
+
+    <!-- Separate Outputs for both Range 1 and Range 2 -->
+    <div id="report1"></div> <!-- Output for Range 1 -->
+    <div id="report2"></div> <!-- Output for Range 2 -->
+
+    <div id="normalMessage">No changes detected yet...</div> <!-- Normal Message Section -->
+
+    <script>
+        let previousAvg1 = null;
+        let previousAvg2 = null;
+        const dataPoints1 = [];
+        const dataPoints2 = [];
+
+        // Function to fetch lux (ambient light) from the API
+        async function fetchLux() {
+            try {
+                console.log("Fetching lux...");
+                const response = await fetch('http://10.202.14.3:5000/sensor-data');
+                const data = await response.json();
+                
+                console.log('API Response:', data); // Log the full API response for debugging
+
+                const luxValue = parseFloat(data.lux); // Parse the lux value as a number
+                if (isNaN(luxValue)) {
+                    console.error("Received invalid lux value:", data.lux); // If lux is not a number, log the error
+                    return null; // Return null if lux value is invalid
+                }
+
+                return luxValue; // Return the valid lux value
+            } catch (error) {
+                console.error('Error fetching lux:', error);
+                return null; // In case of error, return null
+            }
+        }
+
+        // Function to calculate the average of an array
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        // Function to monitor the lux and check conditions
+        async function monitor() {
+            const lux = await fetchLux(); // Fetch the lux data
+            if (lux === null) return; // If lux value is invalid or error occurred, exit the function
+
+            console.log(`Fetched Lux: ${lux.toFixed(2)}`); // Debugging log for lux value
+
+            // Collect lux for first set (Range 1)
+            dataPoints1.push(lux);
+            if (dataPoints1.length === 3) { // Once 3 readings are collected, process
+                const currentAvg1 = calculateAverage(dataPoints1);
+                console.log(`Range 1 - Current Avg Lux: ${currentAvg1.toFixed(2)}`); // Debugging log for current avg
+
+                // Compare with previous average for Range 1
+                if (previousAvg1 !== null) {
+                    const difference1 = Math.abs(currentAvg1 - previousAvg1);
+                    const lower1 = parseFloat(document.getElementById('lowerRange1').value);
+                    const higher1 = parseFloat(document.getElementById('higherRange1').value);
+                    const threshold1 = parseFloat(document.getElementById('threshold1').value);
+
+                    console.log(`Lower1: ${lower1}, Higher1: ${higher1}, Threshold1: ${threshold1}`); // Debugging logs for input values
+
+                    // Updated condition using || (OR)
+                    if ((currentAvg1 < lower1 || currentAvg1 > higher1) || difference1 >= threshold1) {
+                        document.getElementById('report1').innerText = `Alert for Range 1: Avg Lux is ${currentAvg1.toFixed(2)} lux, changed by ${difference1.toFixed(2)} lux`;
+                    } else {
+                        // No alert, print normal message in green
+                        document.getElementById('normalMessage').innerText = `Current Lux (Range 1): ${lux.toFixed(2)} lux - No significant change.`;
+                    }
+                }
+                previousAvg1 = currentAvg1; // Update the previous average
+                dataPoints1.length = 0; // Reset for next cycle (3 readings)
+            }
+
+            // Collect lux for second set (Range 2)
+            dataPoints2.push(lux);
+            if (dataPoints2.length === 3) { // Once 3 readings are collected, process
+                const currentAvg2 = calculateAverage(dataPoints2);
+                console.log(`Range 2 - Current Avg Lux: ${currentAvg2.toFixed(2)}`); // Debugging log for current avg
+
+                // Compare with previous average for Range 2
+                if (previousAvg2 !== null) {
+                    const difference2 = Math.abs(currentAvg2 - previousAvg2);
+                    const lower2 = parseFloat(document.getElementById('lowerRange2').value);
+                    const higher2 = parseFloat(document.getElementById('higherRange2').value);
+                    const threshold2 = parseFloat(document.getElementById('threshold2').value);
+
+                    console.log(`Lower2: ${lower2}, Higher2: ${higher2}, Threshold2: ${threshold2}`); // Debugging logs for input values
+
+                    // Updated condition using || (OR)
+                    if ((currentAvg2 < lower2 || currentAvg2 > higher2) || difference2 >= threshold2) {
+                        document.getElementById('report2').innerText = `Alert for Range 2: Avg Lux is ${currentAvg2.toFixed(2)} lux, changed by ${difference2.toFixed(2)} lux`;
+                    } else {
+                        // No alert, print normal message in green
+                        document.getElementById('normalMessage').innerText = `Current Lux (Range 2): ${lux.toFixed(2)} lux - No significant change.`;
+                    }
+                }
+                previousAvg2 = currentAvg2; // Update the previous average
+                dataPoints2.length = 0; // Reset for next cycle (3 readings)
+            }
+        }
+
+        // Start monitoring when the button is clicked
+        function startMonitoring() {
+            document.getElementById('report1').innerText = ''; // Clear Range 1 output
+            document.getElementById('report2').innerText = ''; // Clear Range 2 output
+            document.getElementById('normalMessage').innerText = 'Monitoring started...';
+            setInterval(monitor, 60000); // Fetch every minute and print status
+        }
+    </script>
+</body>
+</html>
