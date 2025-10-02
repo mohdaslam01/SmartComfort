@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thermal Dashboard (Left: 3-min Temp, Right: Stream)</title>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin:0; height:100%; width:100%; background:#fff; font-family:Arial, sans-serif; }
+    #layout { display:flex; height:100vh; width:100vw; }
+    .left  { flex:1; display:flex; align-items:center; justify-content:center; background:#fff; }
+    .right { flex:1; display:flex; align-items:center; justify-content:center; background:#000; }
+    #tempWrap { text-align:center; }
+    #tempVal  { font-size:4rem; font-weight:700; color:#333; }
+    #tempNote { font-size:1rem; color:#777; margin-top:8px; }
+    #thermalImage { width:100%; height:100%; object-fit:cover; display:block; }
+  </style>
+</head>
+<body>
+  <div id="layout">
+    <!-- LEFT: Big number, updates every 3 minutes -->
+    <div class="left">
+      <div id="tempWrap">
+        <div id="tempVal">-- °C</div>
+        <div id="tempNote">waiting…</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Your working stream viewer (unchanged logic) -->
+    <div class="right">
+      <img id="thermalImage" src="" alt="Thermal Stream">
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const SERVER_IP = "10.202.14.3";                 // <-- set to your Pi IP
+    const THERMAL_URL = `http://${SERVER_IP}:5090/thermal`;
+    const TEMP_URL    = `http://${SERVER_IP}:5090/temp_avg3min`; // 3-min scalar average
+    // If you prefer latest frame instead, use:
+    // const TEMP_URL = `http://${SERVER_IP}:5090/current_temp`;
+
+    // ====== RIGHT SIDE: keep your working 1s refresh ======
+    const img = document.getElementById('thermalImage');
+    function refreshThermal() {
+      img.src = THERMAL_URL + "?" + Date.now(); // cache-bust every second
+    }
+    refreshThermal();
+    setInterval(refreshThermal, 1000);
+
+    // ====== LEFT SIDE: update every 3 minutes ======
+    const tempVal  = document.getElementById('tempVal');
+    const tempNote = document.getElementById('tempNote');
+
+    async function updateTemperature() {
+      try {
+        const res = await fetch(TEMP_URL + "?ts=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        const data = await res.json();
+
+        if (typeof data.avg === "number") {
+          tempVal.textContent = data.avg.toFixed(1) + " °C";
+          tempNote.textContent = "updated " + (data.time || "");
+        } else {
+          tempVal.textContent = "-- °C";
+          tempNote.textContent = (data.status === "no_window" || data.status === "no_frame")
+            ? "waiting for frames…"
+            : "no data";
+        }
+      } catch (e) {
+        console.error("temp fetch failed:", e);
+        tempVal.textContent = "-- °C";
+        tempNote.textContent = "fetch error";
+      }
+    }
+
+    updateTemperature();                       // initial update
+    setInterval(updateTemperature, 3*60*1000); // every 3 minutes
+  </script>
+</body>
+</html>
