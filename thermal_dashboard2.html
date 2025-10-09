@@ -53,7 +53,7 @@
             <div id="tempNote">waiting…</div>
           </div>
           <!-- 🔧 TODO: change the href below to your HTML filename, e.g. './thresholdsetup.html' -->
-          <a class="btn" id="openLink" href="./index.html" target="">Home</a>
+          <a class="btn" id="openLink" href="./index.html" target="">🔙 Back to Live Page</a>
           <a class="btn" id="openLink" href="./thermal_camera.html" target="">Full View</a>
 
 
@@ -155,7 +155,7 @@
 
     // Live poll every 2 seconds (smooth chart + low load)
     pollTemperature();
-    setInterval(pollTemperature, 2000);
+    setInterval(pollTemperature, 60000); //2000 for 2 seconds and 60000 for 60 seconds
 
     // ====== OPTIONAL: If you want to set the button dynamically in JS, do it here ======
     // document.getElementById('openLink').href = './your_file.html';

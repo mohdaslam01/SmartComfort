@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartComfort</title>
+
+  <style>
+    :root{
+      --bg:#f6fafb; --panel:#fff; --accent:#e6f7f1; --accent-2:#eef5ff; --cream:#fff9f0;
+      --text:#1f2a37; --muted:#4b5563; --brand:#0ea5e9; --brand-2:#10b981;
+      --shadow:0 10px 30px rgba(0,0,0,.08); --radius:18px;
+      --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --line:#eef2f7;
+    }
+    html, body { height:100%; }
+    body{
+      font-family: Arial, Helvetica, sans-serif; margin:0; color:var(--text); padding:28px;
+      background:
+        radial-gradient(1200px 600px at 90% -10%, var(--accent) 0%, transparent 40%),
+        radial-gradient(1000px 700px at -10% 110%, var(--accent-2) 0%, transparent 45%),
+        radial-gradient(900px 600px at 110% 60%, var(--cream) 0%, transparent 40%),
+        var(--bg);
+    }
+    h1 { margin:0 0 16px; font-size:28px; letter-spacing:.3px; }
+    .sensor { margin-bottom:10px; }
+
+    /* grid */
+    body > span{
+      display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start;
+    }
+    body > span > div{
+      background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
+      border:1px solid var(--line);
+    }
+    body > span > div:nth-of-type(1){ padding:22px; }
+    body > span > div:nth-of-type(2){ padding:18px; position:sticky; top:22px; }
+
+    h3{
+      margin:0 0 12px; color:var(--muted); font-weight:600; font-size:14px;
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+    div h1{ font-size:22px; margin:6px 0 14px; color:#0f172a; }
+
+    #output{
+      background:linear-gradient(180deg, #ffffff 0%, #fbfeff 100%);
+      border:1px solid #e7eef7; border-radius:14px; padding:14px 16px; line-height:1.5;
+    }
+
+    a{ display:inline-block; margin-top:10px; text-decoration:none; color:var(--brand); font-weight:600; }
+    a:hover{ text-decoration:underline; }
+
+    button{
+      width:100%; display:block; text-align:center; padding:12px 14px; margin:8px 0;
+      border-radius:14px; border:1px solid #dbe8f5;
+      background:linear-gradient(180deg, #ffffff 0%, #f2fbff 100%);
+      color:#0b4c6f; font-weight:700; letter-spacing:.2px; cursor:pointer;
+      box-shadow:0 4px 16px rgba(14,165,233,.08);
+      transition:transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    button:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(14,165,233,.14); background:linear-gradient(180deg,#ffffff 0%,#ecfff7 100%); }
+    button:active{ transform:translateY(0); box-shadow:0 2px 8px rgba(16,185,129,.18) inset; background:linear-gradient(180deg,#e9fff5 0%,#ffffff 100%); }
+
+    .status{
+      display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#374151; margin-left:10px;
+      padding:4px 8px; border-radius:9999px; border:1px solid var(--line); background:#fff;
+    }
+    .dot{ width:8px; height:8px; border-radius:9999px; background:var(--ok); box-shadow:0 0 0 2px rgba(16,185,129,.15); }
+    .status.warn .dot{ background:var(--warn); box-shadow:0 0 0 2px rgba(245,158,11,.15); }
+    .status.err  .dot{ background:var(--err);  box-shadow:0 0 0 2px rgba(239,68,68,.15); }
+
+    @media (max-width:900px){
+      body > span{ grid-template-columns:1fr; }
+      body > span > div:nth-of-type(2){ position:static; }
+      button{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    Welcome to HIBE SmartComfX
+    <span id="status" class="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span><span id="statusText">Initializing…</span>
+    </span>
+  </h1>
+
+  <!-- GRID CONTAINER -->
+  <span>
+    <!-- LEFT: OUTPUT -->
+    <div>
+      <h3>Output</h3>
+      <h1>🔴 Live Sensor Data from Raspberry Pi</h1>
+      <div id="output">Waiting for first reading…</div>
+      <a href="output.html">Live Server</a>
+    </div>
+
+    <!-- RIGHT: NAV -->
+    <div>
+      <h3>Find more..</h3>
+      <button onclick="window.location.href='csv_display_download.html'">📄 View CSV Data</button>
+      <button onclick="window.location.href='thresholdsetup.html'">⚙️ Set Temperature Thresholds</button>
+      <button onclick="window.location.href='thermal_dashboardcheck.html'">🚨 Thermal Camera</button>
+      <button onclick="window.location.href='DOWNLOAD_RANGE_FILENAME.html'">📥 Download by Date Range from Cloud aka AWS</button>
+      <button onclick="window.location.href='https://hibe-lab.com/'">🧪 HIBE Lab</button>
+      <button onclick="window.location.href='chart.html'">📊 Graph Representation</button>
+    </div>
+  </span>
+
+  <script>
+    /**
+     * IMPORTANT DEPLOYMENT NOTES (governments/enterprises):
+     * - Serve this page and the API over the SAME SCHEME (both https) and SAME ORIGIN or enable CORS on the API.
+     *   If this page is https:// and API is http://, modern browsers will BLOCK the request (mixed content).
+     * - Consider a reverse proxy (Nginx) to expose the Flask endpoint under the same origin: /sensor-data.
+     * - Ensure the API returns application/json with stable keys.
+     */
+
+    const API_URL = 'http://10.202.14.3:5000/sensor-data'; // change to /sensor-data if reverse-proxied
+
+    // Last known good values so brief API hiccups don't show "undefined"
+    const lastGood = Object.create(null);
+
+    const fields = [
+      ['timestamp',         '🕒 Time'],
+      ['temperature',       '🌡️ Temp',          (v)=> fmtNum(v, '°C')],
+      ['humidity',          '💧 Humidity',       (v)=> fmtNum(v, '%')],
+      ['pressure',          '🌬️ Pressure',      (v)=> fmtNum(v, ' hPa')],
+      ['gas_resistance',    '🔥 Gas Resistance', (v)=> fmtNum(v, ' Ω')],
+      ['violet',            '🌈 Violet'],
+      ['blue',              '🔵 Blue'],
+      ['green',             '🟢 Green'],
+      ['yellow',            '🟡 Yellow'],
+      ['orange',            '🟠 Orange'],
+      ['red',               '🔴 Red'],
+      ['lux',               '💡 Ambient Light',  (v)=> fmtNum(v, ' lux')],
+    ];
+
+    function fmtNum(v, unit=''){
+      const n = Number(v);
+      if (Number.isFinite(n)) return `${Number(n.toFixed(2))}${unit}`;
+      return null; // forces fallback
+    }
+
+    function safeGet(data, key){
+      const v = data?.[key];
+      if (v === null || v === undefined || (typeof v === 'number' && !Number.isFinite(v))) return null;
+      if (typeof v === 'string' && v.trim() === '') return null;
+      return v;
+    }
+
+    function render(data){
+      const lines = [];
+      for (const [key, label, fmt] of fields){
+        let val = safeGet(data, key);
+        if (val === null && lastGood[key] !== undefined) {
+          // fallback to last good value
+          val = lastGood[key];
+        }
+        if (val !== null) {
+          const out = fmt ? fmt(val) : String(val);
+          if (out !== null) {
+            lastGood[key] = out; // store rendered value to keep consistent units/format
+            lines.push(`<div class="sensor">${label}: ${escapeHtml(out)}</div>`);
+            continue;
+          }
+        }
+        lines.push(`<div class="sensor">${label}: —</div>`);
+      }
+      document.getElementById('output').innerHTML = lines.join('\n');
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function setStatus(mode, text){
+      const el = document.getElementById('status');
+      const t  = document.getElementById('statusText');
+      el.classList.remove('warn','err');
+      if (mode === 'ok') { /* green by default */ }
+      else if (mode === 'warn') el.classList.add('warn');
+      else if (mode === 'err')  el.classList.add('err');
+      t.textContent = text;
+    }
+
+    async function fetchWithTimeout(url, ms=8000){
+      const ctrl = new AbortController();
+      const id = setTimeout(() => ctrl.abort(), ms);
+      try {
+        const res = await fetch(url, {
+          // If you must do cross-origin, configure CORS on the server instead of using 'no-cors'
+          cache: 'no-store',
+          signal: ctrl.signal,
+        });
+        clearTimeout(id);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) throw new Error('Unexpected content-type');
+        return await res.json();
+      } finally {
+        clearTimeout(id);
+      }
+    }
+
+    let intervalId = null;
+    const POLL_MS = 60_000; // refresh every 60 seconds
+
+    async function fetchData(){
+      try {
+        const data = await fetchWithTimeout(API_URL, 8000);
+        if (!data || typeof data !== 'object') throw new Error('Invalid JSON');
+        render(data);
+        setStatus('ok', `LIVE • ${new Date().toLocaleTimeString()}`);
+      } catch (err) {
+        // don’t blank the UI; just mark status + keep last rendered values
+        setStatus('err', `ERROR • ${err.message}`);
+      }
+    }
+
+    // Kick off once, then poll
+    fetchData();
+    intervalId = setInterval(fetchData, POLL_MS);
+
+    // If tab becomes visible again, refresh immediately (helps after sleep)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) fetchData();
+    });
+
+    // (Optional) Simple “stale” indicator if we miss two cycles
+    let lastTick = Date.now();
+    setInterval(() => {
+      const now = Date.now();
+      if (now - lastTick > POLL_MS * 2.2) setStatus('warn', `STALE • Last update ${new Date().toLocaleTimeString()}`);
+      lastTick = now;
+    }, POLL_MS);
+
+  </script>
+</body>
+</html>

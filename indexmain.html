@@ -159,7 +159,7 @@
 </head>
 
 <body>
-  <h1>Welcome to HIBE SmartComfX</h1>
+  <h1>Welcome to SmartComfort</h1>
 
   <!-- GRID CONTAINER (your original <span> kept) -->
   <span>
@@ -197,13 +197,13 @@
         }
 
         fetchData();
-        setInterval(fetchData, 60000); // Refresh every 10 seconds 10000 every 10 - seconds 3600000 every 1 - hour 60000e every 60 seconds
+        setInterval(fetchData, 3600000); // Refresh every 10 seconds 10000 every 10 - seconds 3600000 every 1 - hour
       </script>
     </div>
 
     <!-- RIGHT: BUTTONS PANEL (existing buttons + 4 more, filenames as comments) -->
     <div>
-      <h3>Find more..</h3>
+      <h3>Buttons</h3>
 
       <button onclick="window.location.href='csv_display_download.html'">📄 View CSV Data</button>
 
@@ -212,26 +212,26 @@
 
       <!-- ✅ Additional Buttons (replace filenames when ready) -->
       <!-- TODO: replace 'ALERTS_FILENAME.html' -->
-      <button onclick="window.location.href='thermal_dashboardcheck.html'">🚨 Thermal Camera</button>
+      <button onclick="window.location.href='ALERTS_FILENAME.html'">🚨 Alerts & Notifications</button>
 
       <!-- TODO: replace 'DOWNLOAD_RANGE_FILENAME.html' -->
-      <button onclick="window.location.href='DOWNLOAD_RANGE_FILENAME.html'">📥 Download by Date Range from Cloud aka AWS</button>
+      <button onclick="window.location.href='DOWNLOAD_RANGE_FILENAME.html'">📥 Download by Date Range</button>
 
       <!-- TODO: replace 'CALIBRATION_FILENAME.html' -->
-      <button onclick="window.location.href='https://hibe-lab.com/'">🧪 HIBE Lab</button>
+      <button onclick="window.location.href='CALIBRATION_FILENAME.html'">🧪 Sensor Calibration</button>
 
       <!-- TODO: replace 'SETTINGS_FILENAME.html' -->
-      <button onclick="window.location.href='chart.html'">📊 Graph Representation</button>
+      <button onclick="window.location.href='SETTINGS_FILENAME.html'">🛠️ System Settings</button>
 
-      <!-- <div class="caption">Tip: Replace the placeholder filenames above with your actual pages.</div> -->
+      <div class="caption">Tip: Replace the placeholder filenames above with your actual pages.</div>
     </div>
 
     <!-- RIGHT: LIVE GRAPH PANEL (kept same) -->
-    <!-- <div style="margin-top: 00px;">
+    <div style="margin-top: 20px;">
       <h3>Graph Representation</h3>
       <p>📈 Click below to view live-updating sensor data chart</p>
       <button onclick="window.location.href='chart.html'">📊 View Live Graph</button>
-    </div> -->
+    </div>
   </span>
 </body>
 </html>

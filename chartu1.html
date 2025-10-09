@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Sensor Chart - SmartComfort</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #222;
+    }
+    canvas {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      max-width: 100%;
+    }
+    #back-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  
+  
+</head>
+<body>
+  <!-- <h1>📊 Live Sensor Data Graph</h1> -->
+  <canvas id="sensorChart" width="1000" height="500"></canvas>
+  <br />
+  <!-- <button id="back-button" onclick="window.location.href='index.html'">🔙 Back to Dashboard</button> -->
+
+  <!-- Load Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [], // Timestamps
+        datasets: [
+          { label: '🌡️ Temperature (°C)', data: [], borderWidth: 2, fill: false },
+          { label: '💧 Humidity (%)', data: [], borderWidth: 2, fill: false },
+          // { label: '🌬️ Pressure (hPa)', data: [], borderWidth: 2, fill: false },
+          // { label: '🔥 Gas Resistance (Ω)', data: [], borderWidth: 2, fill: false },
+          { label: '💡 Ambient Light (lux)', data: [], borderWidth: 2, fill: false },
+          { label: '🟣 Violet', data: [], borderWidth: 2, fill: false },
+          { label: '🔵 Blue', data: [], borderWidth: 2, fill: false },
+          { label: '🟢 Green', data: [], borderWidth: 2, fill: false },
+          { label: '🟡 Yellow', data: [], borderWidth: 2, fill: false },
+          { label: '🟠 Orange', data: [], borderWidth: 2, fill: false },
+          { label: '🔴 Red', data: [], borderWidth: 2, fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: { position: 'top' },
+          title: {
+            display: true,
+            text: 'SmartComfort - Real-Time Sensor Readings each point at every next minute'
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Sensor Values'
+            }
+          }
+        }
+      }
+    });
+
+    async function fetchAndUpdate() {
+      try {
+        const res = await fetch('http://10.202.14.3:5000/sensor-data');
+        const data = await res.json();
+
+        const time = data.timestamp;
+        const maxPoints = 20;
+
+        chart.data.labels.push(time);
+        if (chart.data.labels.length > maxPoints) chart.data.labels.shift();
+
+        const values = [
+          data.temperature,
+          data.humidity,
+          data.pressure,
+          data.gas_resistance,
+          data.lux,
+          data.violet,
+          data.blue,
+          data.green,
+          data.yellow,
+          data.orange,
+          data.red
+        ];
+
+        chart.data.datasets.forEach((ds, i) => {
+          ds.data.push(values[i]);
+          if (ds.data.length > maxPoints) ds.data.shift();
+        });
+
+        chart.update();
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    }
+
+    fetchAndUpdate();
+    setInterval(fetchAndUpdate, 36000); // 10000 every 10 - seconds 3600000 every 1 - hour 180000 for 3 minutes
+  </script>
+</body>
+</html>
