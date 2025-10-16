@@ -344,6 +344,7 @@
 
         showOk("Access granted. Redirecting…");
         // tiny delay for UI feedback
+        sessionStorage.setItem("loggedIn", "true");
         setTimeout(() => {
           // IMPORTANT: update DESTINATION above to your file.
           window.location.href = DESTINATION;

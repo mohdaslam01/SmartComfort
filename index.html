@@ -156,6 +156,7 @@
       button { width: 100%; }
     }
   </style>
+  <script src="ensure.js"></script>
 </head>
 
 <body>
@@ -198,6 +199,10 @@
 
         fetchData();
         setInterval(fetchData, 60000); // Refresh every 10 seconds 10000 every 10 - seconds 3600000 every 1 - hour 60000e every 60 seconds
+        if (sessionStorage.getItem("loggedIn") === "true") {
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+            }
       </script>
     </div>
 
