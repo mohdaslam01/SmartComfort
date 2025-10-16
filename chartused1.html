@@ -176,7 +176,7 @@
 
     async function fetchAndUpdate() {
       try {
-        const res = await fetch('http://10.202.14.3:5000/sensor-data');
+        const res = await fetch('http://10.196.133.61:5000/sensor-data');
         const data = await res.json();
 
         const time = data.timestamp;

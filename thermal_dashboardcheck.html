@@ -96,10 +96,10 @@
   <div id="layout">
     <!-- ========== LEFT COLUMN: thermal.png (vertical/shorts-like) ========== -->
     <section class="col">
-        
-    <h2>Thermal Imaging Information</h2>
+      <h2>Thermal Imaging Information</h2>
       <div class="left-wrap">
         <!-- Replace src if needed -->
+         
         <img id="promoImage" src="thermal.png" alt="Thermal Information" />
       </div>
     </section>
@@ -137,7 +137,7 @@
 
   <script>
     // ====== CONFIG (your Pi) ======
-    const SERVER     = "http://10.202.14.3:5090";
+    const SERVER     = "http://10.196.133.61:5090";
     const THERMAL_URL= SERVER + "/thermal";
     const TEMP_URL   = SERVER + "/current_temp"; // returns { avg, status, time }
 
@@ -219,7 +219,7 @@
 
     // Poll every 2 seconds for smooth chart & low load
     pollTemperature();
-    setInterval(pollTemperature, 60000); //each 60 seconds
+    setInterval(pollTemperature, 1000); //each 60 seconds
 
     // If you ever want to set these dynamically:
     // document.getElementById('btnBack').href = './index.html';

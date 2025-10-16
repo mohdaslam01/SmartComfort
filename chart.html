@@ -32,7 +32,7 @@
   <!-- Pin a specific Chart.js version in production (host yourself + SRI if possible) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <script>
-    const API_URL = 'http://10.202.14.3:5000/sensor-data'; // consider HTTPS + same-origin in prod
+    const API_URL = 'http://10.196.133.61:5000/sensor-data'; // consider HTTPS + same-origin in prod
     const ctx = document.getElementById('sensorChart').getContext('2d');
     const statusEl = document.getElementById('status');
     const MAX_POINTS = 20;
@@ -123,7 +123,7 @@
 
     // Initial + per-minute
     fetchAndUpdate();
-    setInterval(fetchAndUpdate, 36000); // 60,000 ms = 1 minute, so 36000 for 36 seconds
+    setInterval(fetchAndUpdate, 300000); // 60,000 ms = 1 minute, so 36000 for 36 seconds
   </script>
 </body>
 </html>

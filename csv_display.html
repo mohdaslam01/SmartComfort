@@ -16,12 +16,12 @@
 
     <a href="index.html">🔙 Back to Live Page</a>
     <br><br>
-    <a href="http://10.202.14.3:5000/download-csv" download>
+    <a href="http://10.196.133.61:5000/download-csv" download>
         📥 Download Full CSV Log
     </a>
 
     <script>
-        fetch("http://10.202.14.3:5000/csv-json")
+        fetch("http://10.196.133.61:5000/csv-json")
             .then(response => response.json())
             .then(data => {
                 const table = document.getElementById("csvTable");

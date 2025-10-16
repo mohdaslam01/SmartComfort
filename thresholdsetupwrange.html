@@ -28,7 +28,7 @@
         const dataPoints = [];
 
         async function fetchTemperature() {
-            const response = await fetch('http://10.202.14.3:5000/sensor-data');
+            const response = await fetch('http://10.196.133.61:5000/sensor-data');
             const data = await response.json();
             return parseFloat(data.temperature);
         }
