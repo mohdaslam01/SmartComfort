@@ -183,6 +183,7 @@
       }
     });
 
+    let lastTemp = null;
     async function pollTemperature() {
       try {
         const res = await fetch(TEMP_URL + "?ts=" + Date.now(), { cache: "no-store" });
@@ -203,14 +204,21 @@
 
         // Update chart
         if (typeof data.avg === "number") {
+          const currentTemp = Number(data.avg);
           const label = data.time || new Date().toLocaleTimeString();
           tempChart.data.labels.push(label);
+           if (lastTemp !== null && Math.abs(currentTemp - lastTemp) > 5) {
+            console.warn("Skipped sudden change:", currentTemp);
+            tempNote.textContent = "Skipped sudden change";
+            return; // ⛔ Skip updating chart
+          }
           tempChart.data.datasets[0].data.push(Number(data.avg));
           if (tempChart.data.labels.length > maxPoints) {
             tempChart.data.labels.shift();
             tempChart.data.datasets[0].data.shift();
           }
           tempChart.update('none');
+          lastTemp = currentTemp;
         }
       } catch (e) {
         console.error("current_temp fetch failed:", e);
