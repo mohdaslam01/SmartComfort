@@ -212,6 +212,7 @@
             tempNote.textContent = "Skipped sudden change";
             return; // ⛔ Skip updating chart
           }
+          //tempChart.data.labels.push(label); ---acting as to match data rendering - Alhamdulillah, Laa ilaaha ilallah
           tempChart.data.datasets[0].data.push(Number(data.avg));
           if (tempChart.data.labels.length > maxPoints) {
             tempChart.data.labels.shift();
