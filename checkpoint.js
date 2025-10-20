@@ -1,0 +1,23 @@
+const endpoints = [
+  'http://10.196.133.61:5000/sensor-data',   // Place N
+  'http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/sensor-data'     // Place M
+];
+
+async function fetchWithFallback(urls) {
+  for (let url of urls) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        console.log(`✅ Using ${url}`);
+        return res; // ⚠️ return the response, not JSON, so existing code still works
+      }
+    } catch (err) {
+      console.warn(`⚠️ Failed ${url}: ${err}`);
+    }
+  }
+  throw new Error("All endpoints failed");
+}
