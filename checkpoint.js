@@ -19,5 +19,5 @@ async function fetchWithFallback(urls) {
       console.warn(`⚠️ Failed ${url}: ${err}`);
     }
   }
-  throw new Error("All endpoints failed");
+  throw new Error("All endpoints failed - Follow https://nexus.njit.edu/highlander_nexus?id=kb_article&sysparm_article=KB0010324&topic_id=87269d7987d4f950d0f70f670cbb3504");
 }
