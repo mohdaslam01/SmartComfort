@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="ensure.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Sensor Chart - SmartComfort</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #222; }
+    canvas {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      max-width: 100%;
+    }
+    #status {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sensorChart" width="1000" height="500"></canvas>
+  <div id="status" aria-live="polite"></div>
+
+  <!-- Pin a specific Chart.js version in production (host yourself + SRI if possible) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script>
+    const API_URL = 'http://10.196.133.61:5000/sensor-data'; // consider HTTPS + same-origin in prod
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    const statusEl = document.getElementById('status');
+    const MAX_POINTS = 20;
+
+    // Helper: coerce to number or null
+    const toNum = v => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: '🌡️ Temperature (°C)', data: [], borderWidth: 2, fill: false },
+          { label: '💧 Humidity (%)',      data: [], borderWidth: 2, fill: false },
+          { label: '💡 Ambient Light (lux)', data: [], borderWidth: 2, fill: false },
+          { label: '🟣 Violet',            data: [], borderWidth: 2, fill: false },
+          { label: '🔵 Blue',              data: [], borderWidth: 2, fill: false },
+          { label: '🟢 Green',             data: [], borderWidth: 2, fill: false },
+          { label: '🟡 Yellow',            data: [], borderWidth: 2, fill: false },
+          { label: '🟠 Orange',            data: [], borderWidth: 2, fill: false },
+          { label: '🔴 Red',               data: [], borderWidth: 2, fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        animation: false,
+        plugins: {
+          legend: { position: 'top' },
+          title: {
+            display: true,
+            text: 'SmartComfort — Real-Time Sensor Readings'
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Time' } },
+          y: { title: { display: true, text: 'Sensor Values' } }
+        }
+      }
+    });
+
+    async function fetchAndUpdate() {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000); // 8s timeout
+
+      try {
+        const res = await fetch(API_URL, { signal: ctrl.signal });
+        clearTimeout(t);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Expecting these keys from your server:
+        // timestamp, temperature, humidity, lux, violet, blue, green, yellow, orange, red
+        const time = data.timestamp || new Date().toLocaleTimeString();
+
+        const series = [
+          toNum(data.temperature),
+          toNum(data.humidity),
+          toNum(data.lux),
+          toNum(data.violet),
+          toNum(data.blue),
+          toNum(data.green),
+          toNum(data.yellow),
+          toNum(data.orange),
+          toNum(data.red)
+        ];
+
+        // Push label
+        chart.data.labels.push(time);
+        if (chart.data.labels.length > MAX_POINTS) chart.data.labels.shift();
+
+        // Push each series in order
+        chart.data.datasets.forEach((ds, i) => {
+          ds.data.push(series[i]);
+          if (ds.data.length > MAX_POINTS) ds.data.shift();
+        });
+
+        chart.update();
+        statusEl.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        statusEl.textContent = `Data fetch failed: ${err.message}`;
+        // Keep the chart as-is on failure
+      }
+    }
+
+    // Initial + per-minute
+    fetchAndUpdate();
+    setInterval(fetchAndUpdate, 300000); // 60,000 ms = 1 minute, so 36000 for 36 seconds
+  </script>
+</body>
+</html>
