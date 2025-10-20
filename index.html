@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartComfort</title>
-  <script src="checkpoint.js"></script>
+  <script src="check.js"></script>
   <style>
     :root{
       --bg: #f6fafb;               /* airy white-blue */
@@ -174,8 +174,8 @@
       <script>
         async function fetchData() {
           try {
-            const response = await fetchWithFallback(endpoints);
-            // const response = await fetch('http://10.196.133.61:5000/sensor-data');
+            // const check = await fetchWithFallback(endpoints);
+            const response = await fetch('http://10.196.133.61:5000/sensor-data');
             const data = await response.json();
 
             let html = `
