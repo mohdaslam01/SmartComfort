@@ -6,12 +6,12 @@
       "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:9990/:path*"
     },
     {
-      "source": "/apiA/:path*",
-      "destination": "http://YOUR-SECOND-HOST:PORT/:path*"
+      "source": "/api7000/:path*",
+      "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/:path*"
     },
     {
-      "source": "/apiB/:path*",
-      "destination": "http://YOUR-THIRD-HOST:PORT/:path*"
+      "source": "/api5000/:path*",
+      "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:5000/:path*"
     }
   ]
 }
