@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="ensure.js"></script>
+  <title>Thermal Dashboard (3-Column: Image • Graph • Stream)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#222;
+      --muted:#777;
+      --stroke:#e5e7eb;
+      --shadow:0 6px 16px rgba(0,0,0,0.08);
+      --brand:#0ea5e9;
+    }
+    html, body { margin:0; height:100%; width:100%; background:var(--bg); font-family:Arial, sans-serif; }
+    
+    /* ============= LAYOUT ============= */
+    #layout {
+      display:grid;
+      grid-template-columns: 0.9fr 1.3fr 1fr;  /* Left image | Middle graph | Right stream */
+      grid-template-rows: 100vh;
+      width:100vw; height:100vh;
+    }
+    .col {
+      box-sizing:border-box;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      background:var(--bg);
+    }
+
+    /* Cards / Containers */
+    .card  { background:#fff; border:1px solid var(--stroke); border-radius:12px; box-shadow:var(--shadow); }
+    .pad16 { padding:16px; }
+    .row   { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+    /* Buttons */
+    .btn {
+      display:inline-block;
+      padding:10px 14px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      background:#f7f7f7;
+      color:#333;
+      text-decoration:none;
+      font-weight:700;
+      letter-spacing:.2px;
+      transition:transform 0.06s ease, box-shadow 0.12s ease, border-color .12s ease;
+      white-space:nowrap;
+    }
+    .btn:hover   { box-shadow:0 4px 14px rgba(0,0,0,0.12); border-color:#ccc; }
+    .btn:active  { transform:scale(0.98); }
+    
+    /* Temp text (slightly smaller per your request) */
+    #tempVal  { font-size:2.2rem; font-weight:800; color:var(--ink); line-height:1.1; }
+    #tempNote { font-size:0.95rem; color:var(--muted); }
+
+    /* LEFT: Tall promo image (thermal.png) */
+    .left-wrap { flex:1; display:flex; }
+    #promoImage {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+      display:block;
+    }
+
+    /* MIDDLE: top card = temp/controls, bottom = chart (fills remaining) */
+    /* .middle-top { } */
+    .chart-wrap { flex:1; position:relative; min-height:240px; }
+    .chart-wrap canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
+
+    /* RIGHT: live thermal stream */
+    .right-wrap { background:#000; border-radius:12px; overflow:hidden; flex:1; display:flex; }
+    #thermalImage { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Responsive: stack on narrow screens */
+    @media (max-width: 1100px) {
+      #layout {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+        height:auto;
+      }
+      .col { min-height:50vh; }
+    }
+  </style>
+
+  <!-- Chart.js for the live graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="layout">
+    <!-- ========== LEFT COLUMN: thermal.png (vertical/shorts-like) ========== -->
+    <section class="col">
+      <h2>Thermal Imaging Information</h2>
+      <div class="left-wrap">
+        <!-- Replace src if needed -->
+         
+        <img id="promoImage" src="thermal.png" alt="Thermal Information" />
+      </div>
+    </section>
+
+    <!-- ========== MIDDLE COLUMN: Temp + Buttons + Live Graph ========== -->
+    <section class="col">
+      <!-- Top: current temp + two buttons -->
+      <div class="card pad16 middle-top">
+        <div class="row">
+          <div>
+            <div id="tempVal">-- °C</div>
+            <div id="tempNote">waiting…</div>
+          </div>
+          <div class="row" style="gap:10px;">
+            <!-- Change hrefs as needed -->
+            <a class="btn" id="btnBack" href="./main.html">🔙 Back to Live Page</a>
+            <a class="btn" id="btnFullView" href="./thermal_camera.html">Full View</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: Chart (fills the remaining height) -->
+      <div class="card chart-wrap">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ========== RIGHT COLUMN: Thermal Stream Viewer ========== -->
+    <section class="col">
+      <div class="right-wrap">
+        <img id="thermalImage" src="" alt="Thermal Stream">
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ====== CONFIG (your Pi) ======
+    const SERVER     = "http://10.196.133.61:5090";
+    const THERMAL_URL= SERVER + "/thermal";
+    const TEMP_URL   = SERVER + "/current_temp"; // returns { avg, status, time }
+
+    // ====== RIGHT COLUMN: refresh image every 1s ======
+    const thermalImg = document.getElementById('thermalImage');
+    function refreshThermal() {
+      thermalImg.src = THERMAL_URL + "?" + Date.now(); // cache-bust
+    }
+    refreshThermal();
+    setInterval(refreshThermal, 1000);
+
+    // ====== MIDDLE: Number + Live Chart ======
+    const tempVal  = document.getElementById('tempVal');
+    const tempNote = document.getElementById('tempNote');
+
+    const ctx = document.getElementById('tempChart').getContext('2d');
+    const maxPoints = 300; // keep last ~10 min @ 2s interval
+
+    const tempChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Current Temp (°C)',
+          data: [],
+          borderColor: '#ff6600',
+          backgroundColor: 'rgba(255,165,0,0.2)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Time' }, ticks: { maxTicksLimit: 8 } },
+          y: { title: { display: true, text: 'Temperature (°C)' }, beginAtZero: false }
+        },
+        plugins: { legend: { display: true, position: 'top' } }
+      }
+    });
+
+    let lastTemp = null;
+    async function pollTemperature() {
+      try {
+        const res = await fetch(TEMP_URL + "?ts=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        const data = await res.json();
+
+        // Update number
+        if (typeof data.avg === "number") {
+          tempVal.textContent = data.avg.toFixed(1) + " °C";
+          tempNote.textContent = "updated " + (data.time || "");
+        } else if (data.status === "no_frame") {
+          tempVal.textContent = "-- °C";
+          tempNote.textContent = "waiting for first frame…";
+        } else {
+          tempVal.textContent = "-- °C";
+          tempNote.textContent = "no data";
+        }
+
+        // Update chart
+        if (typeof data.avg === "number") {
+          const currentTemp = Number(data.avg);
+          const label = data.time || new Date().toLocaleTimeString();
+          tempChart.data.labels.push(label);
+           if (lastTemp !== null && Math.abs(currentTemp - lastTemp) > 5) {
+            console.warn("Skipped sudden change:", currentTemp);
+            tempNote.textContent = "Skipped sudden change";
+            return; // ⛔ Skip updating chart
+          }
+          //tempChart.data.labels.push(label); ---acting as to match data rendering - Alhamdulillah, Laa ilaaha ilallah
+          tempChart.data.datasets[0].data.push(Number(data.avg));
+          if (tempChart.data.labels.length > maxPoints) {
+            tempChart.data.labels.shift();
+            tempChart.data.datasets[0].data.shift();
+          }
+          tempChart.update('none');
+          lastTemp = currentTemp;
+        }
+      } catch (e) {
+        console.error("current_temp fetch failed:", e);
+        tempNote.textContent = "fetch error";
+      }
+    }
+
+    // Poll every 2 seconds for smooth chart & low load
+    pollTemperature();
+    setInterval(pollTemperature, 1000); //each 60 seconds
+
+    // If you ever want to set these dynamically:
+    // document.getElementById('btnBack').href = './main.html';
+    // document.getElementById('btnFullView').href = './thermal_camera.html';
+  </script>
+</body>
+</html>

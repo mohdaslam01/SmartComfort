@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold Setup with Range</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #report1, #report2 { margin-top: 20px; color: green; font-weight: bold; }
+        #normalMessage { margin-top: 20px; color: blue; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <h1>SmartComfort - Threshold & Range Setup</h1>
+
+    <!-- First Range and Threshold (Existing) -->
+    <div class="container">
+        <label>Lower Temperature 1 (°C): <input type="number" id="lowerRange1"></label>
+        <label>Higher Temperature 1 (°C): <input type="number" id="higherRange1"></label>
+        <label>Threshold 1 (°C): <input type="number" id="threshold1"></label>
+        <button onclick="startMonitoring()">Start Monitoring</button>
+    </div>
+
+    <!-- Second Range and Threshold (New) -->
+    <div class="container">
+        <label>Lower Temperature 2 (°C): <input type="number" id="lowerRange2"></label>
+        <label>Higher Temperature 2 (°C): <input type="number" id="higherRange2"></label>
+        <label>Threshold 2 (°C): <input type="number" id="threshold2"></label>
+    </div>
+
+    <!-- Separate Outputs for both Range 1 and Range 2 -->
+    <div id="report1"></div> <!-- Output for Range 1 -->
+    <div id="report2"></div> <!-- Output for Range 2 -->
+
+    <div id="normalMessage">No changes detected yet...</div> <!-- Normal Message Section -->
+
+    <script>
+        let previousAvg1 = null;
+        let previousAvg2 = null;
+        const dataPoints1 = [];
+        const dataPoints2 = [];
+
+        // Function to fetch temperature from the API
+        async function fetchTemperature() {
+            try {
+                const response = await fetch('http://10.196.133.61:5000/sensor-data');
+                const data = await response.json();
+                return parseFloat(data.temperature); // Return the temperature value
+            } catch (error) {
+                console.error('Error fetching temperature:', error);
+                return null; // In case of error, return null
+            }
+        }
+
+        // Function to calculate the average of an array
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        // Function to monitor the temperature and check conditions
+        async function monitor() {
+            const temp = await fetchTemperature(); // Fetch the temperature data
+            if (temp === null) return; // If there's an error fetching, exit the function
+
+            // Collect temperature for first set (Range 1)
+            dataPoints1.push(temp);
+            if (dataPoints1.length === 3) { // Once 3 readings are collected, process
+                const currentAvg1 = calculateAverage(dataPoints1);
+                // Compare with previous average for Range 1
+                if (previousAvg1 !== null) {
+                    const difference1 = Math.abs(currentAvg1 - previousAvg1);
+                    const lower1 = parseFloat(document.getElementById('lowerRange1').value);
+                    const higher1 = parseFloat(document.getElementById('higherRange1').value);
+                    const threshold1 = parseFloat(document.getElementById('threshold1').value);
+
+                    // Updated condition using || (OR)
+                    if ((currentAvg1 < lower1 || currentAvg1 > higher1) || difference1 >= threshold1) {
+                        document.getElementById('report1').innerText = `Alert for Range 1: Avg Temp is ${currentAvg1.toFixed(2)} °C, changed by ${difference1.toFixed(2)} °C`;
+                    } else {
+                        // No alert, print normal message
+                        document.getElementById('normalMessage').innerText = `Current Temp (Range 1): ${temp.toFixed(2)} °C - No significant change.`;
+                    }
+                }
+                previousAvg1 = currentAvg1; // Update the previous average
+                dataPoints1.length = 0; // Reset for next cycle
+            }
+
+            // Collect temperature for second set (Range 2)
+            dataPoints2.push(temp);
+            if (dataPoints2.length === 3) { // Once 3 readings are collected, process
+                const currentAvg2 = calculateAverage(dataPoints2);
+                // Compare with previous average for Range 2
+                if (previousAvg2 !== null) {
+                    const difference2 = Math.abs(currentAvg2 - previousAvg2);
+                    const lower2 = parseFloat(document.getElementById('lowerRange2').value);
+                    const higher2 = parseFloat(document.getElementById('higherRange2').value);
+                    const threshold2 = parseFloat(document.getElementById('threshold2').value);
+
+                    // Updated condition using || (OR)
+                    if ((currentAvg2 < lower2 || currentAvg2 > higher2) || difference2 >= threshold2) {
+                        document.getElementById('report2').innerText = `Alert for Range 2: Avg Temp is ${currentAvg2.toFixed(2)} °C, changed by ${difference2.toFixed(2)} °C`;
+                    } else {
+                        // No alert, print normal message
+                        document.getElementById('normalMessage').innerText = `Current Temp (Range 2): ${temp.toFixed(2)} °C - No significant change.`;
+                    }
+                }
+                previousAvg2 = currentAvg2; // Update the previous average
+                dataPoints2.length = 0; // Reset for next cycle
+            }
+        }
+
+        // Start monitoring when the button is clicked
+        function startMonitoring() {
+            document.getElementById('report1').innerText = ''; // Clear Range 1 output
+            document.getElementById('report2').innerText = ''; // Clear Range 2 output
+            document.getElementById('normalMessage').innerText = 'Monitoring started...';
+            setInterval(monitor, 60000); // Fetch every minute
+        }
+    </script>
+</body>
+</html>

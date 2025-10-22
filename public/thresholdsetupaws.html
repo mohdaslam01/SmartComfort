@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Threshold Setup with Range</title>
+  <style>
+    :root{
+      --bg-cream:#f7f6f2;
+      --bg-blue-soft:#eaf3fb;
+      --bg-green-soft:#eef8f3;
+      --card:#ffffff;
+      --stroke:#dfe7ee;
+      --txt:#243447;
+      --txt-muted:#5b6b7a;
+      --accent:#3aa0c8;
+      --accent-2:#46b57a;
+      --accent-3:#f4e9d8;
+      --shadow:0 6px 18px rgba(28, 55, 90, 0.08);
+      --radius:16px;
+    }
+
+    html,body{height:100%;}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--txt);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--bg-blue-soft), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, var(--bg-green-soft), transparent 60%),
+        radial-gradient(600px 300px at -10% 110%, var(--accent-3), transparent 60%),
+        var(--bg-cream);
+      margin:0;
+      padding:0;
+      line-height:1.45;
+    }
+
+    .page{min-height:100vh; display:grid; grid-template-rows:auto 1fr auto;}
+
+    .header{
+      padding:24px 24px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .header h1{
+      margin:0;
+      padding:16px 10px;
+      border-radius:var(--radius);
+      background:linear-gradient(135deg,#ffffff,#f6fbff 40%,#f3fff8 100%);
+      border:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+      color:var(--txt);
+      letter-spacing:.5px;
+      flex:1;
+    }
+    .back-btn{
+      margin-left:16px;
+      padding:12px 18px;
+      border-radius:12px;
+      border:1px solid #bfe7f7;
+      background:linear-gradient(135deg,#eaf7ff,#e6fff4);
+      color:#0f4a64;
+      font-weight:700;
+      text-decoration:none;
+      box-shadow:var(--shadow);
+      transition:.2s ease;
+    }
+    .back-btn:hover{ filter:brightness(1.05); background:linear-gradient(135deg,#dff3ff,#dcffe8); }
+    .back-btn:active{ transform:scale(.98); }
+
+    .layout{ display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:8px 24px 24px; }
+    .left{ min-height:0; }
+    .right{ min-height:0; display:grid; grid-template-rows:auto 1fr; gap:14px; }
+
+    h2{ margin:18px 0 10px; color:var(--txt); letter-spacing:.3px; position:relative; padding-left:12px; }
+    h2::before{
+      content:""; position:absolute; left:0; top:6px; bottom:6px; width:6px; border-radius:6px;
+      background:linear-gradient(180deg,var(--accent),var(--accent-2)); opacity:.85;
+    }
+
+    .container{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      padding:14px;
+      margin-bottom:16px;
+      box-shadow:var(--shadow);
+      display:grid;
+      gap:10px;
+      grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    label{
+      display:flex; flex-direction:column; gap:6px; font-size:14px; color:var(--txt-muted);
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      border:1px solid var(--stroke); padding:10px 12px; border-radius:12px;
+    }
+    input{
+      padding:12px 10px; border:1px solid var(--stroke); border-radius:10px; outline:none;
+      transition: box-shadow .2s ease, border-color .2s ease; background:#fff; color:var(--txt);
+    }
+    input:focus{ border-color:#b7e3ff; box-shadow:0 0 0 4px rgba(63,163,222,0.18); }
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      padding:12px;
+      box-shadow:var(--shadow);
+      display:flex; align-items:center; gap:8px;
+      flex-wrap:wrap;
+    }
+    button{
+      padding:12px 16px; border:1px solid #bfe7f7; border-radius:12px;
+      background:linear-gradient(135deg,#eaf7ff,#e6fff4);
+      color:#0f4a64; font-weight:700; cursor:pointer; box-shadow:var(--shadow); transition:.2s ease;
+    }
+    button:hover{ filter:brightness(1.03); }
+    button:active{ transform:translateY(1px); background:linear-gradient(135deg,#cfeeff,#d7ffe9); }
+
+    .output-panel{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:12px 16px;
+      overflow:auto;
+    }
+    #report1:empty, #report2:empty,
+    #humidityReport1:empty, #humidityReport2:empty,
+    #lightReport1:empty, #lightReport2:empty { display:none; }
+
+    #report1, #report2, #humidityReport1, #humidityReport2, #lightReport1, #lightReport2{
+      margin:0; padding:10px 0; border-top:1px dashed #cfe8d9; color:#1b6b42; font-weight:700;
+    }
+    .output-panel > div:not(:empty):first-child{ border-top:none; padding-top:0; }
+
+    #normalMessage{
+      margin:8px 0 0 0; padding:10px 0 0 0; border-top:1px dashed #dfe7ee;
+      color:#1b4b7a; font-weight:600;
+    }
+    #report1::before, #report2::before,
+    #humidityReport1::before, #humidityReport2::before,
+    #lightReport1::before, #lightReport2::before{ content:"✔ "; color:var(--accent-2); }
+
+    .note{
+      margin:10px 24px 24px; padding:14px 16px; border-radius:14px; border:1px solid #efe2c9;
+      background:linear-gradient(180deg,#fffaf0,#ffffff); color:#6b5b3a; box-shadow:var(--shadow);
+    }
+
+    @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+    @media (max-width:520px){
+      .header{ flex-direction:column; align-items:stretch; }
+      .back-btn{ margin-left:0; margin-top:10px; align-self:flex-end; }
+    }
+  </style>
+  <script src="ensure.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>SmartComfort</h1>
+      <a href="aws.html" class="back-btn">🔙 Back to Live Page</a>
+    </div>
+
+    <div class="layout">
+      <div class="left">
+        <h2>Temperature</h2>
+        <div class="container">
+          <label>Lower Temperature 1 (°C): <input type="number" id="lowerRange1" value="18"></label>
+          <label>Higher Temperature 1 (°C): <input type="number" id="higherRange1" value="22"></label>
+          <label>Threshold 1 (°C): <input type="number" id="threshold1" value="0.05"></label>
+        </div>
+        <div class="container">
+          <label>Lower Temperature 2 (°C): <input type="number" id="lowerRange2" value="20"></label>
+          <label>Higher Temperature 2 (°C): <input type="number" id="higherRange2" value="24"></label>
+          <label>Threshold 2 (°C): <input type="number" id="threshold2" value="0.5"></label>
+        </div>
+
+        <h2>Humidity</h2>
+        <div class="container">
+          <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="38"></label>
+          <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="60"></label>
+          <label>Threshold 1 (%): <input type="number" id="thresholdHumidity1" value="0.5"></label>
+        </div>
+        <div class="container">
+          <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="42"></label>
+          <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="58"></label>
+          <label>Threshold 2 (%): <input type="number" id="thresholdHumidity2" value="0.1"></label>
+        </div>
+
+        <h2>Light</h2>
+        <div class="container">
+          <label>Lower Light 1 (lux): <input type="number" id="lowerLight1" value="90"></label>
+          <label>Higher Light 1 (lux): <input type="number" id="higherLight1" value="120"></label>
+          <label>Threshold 1 (lux): <input type="number" id="thresholdLight1" value="1"></label>
+        </div>
+        <div class="container">
+          <label>Lower Light 2 (lux): <input type="number" id="lowerLight2" value="1000"></label>
+          <label>Higher Light 2 (lux): <input type="number" id="higherLight2" value="12000"></label>
+          <label>Threshold 2 (lux): <input type="number" id="thresholdLight2" value="2"></label>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="controls">
+          <button id="monitorButton">Start Monitoring</button>
+          <span id="statusLabel" aria-live="polite"></span>
+        </div>
+
+        <div class="output-panel">
+          <div id="report1"></div>
+          <div id="report2"></div>
+          <div id="humidityReport1"></div>
+          <div id="humidityReport2"></div>
+          <div id="lightReport1"></div>
+          <div id="lightReport2"></div>
+          <div id="normalMessage">No changes detected yet...</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>Note:</strong> Output appears only if the 3-reading average is outside the set range
+      or the change since the previous average meets/exceeds the threshold. Otherwise the system
+      stays quiet and continues monitoring once per minute.
+    </p>
+  </div>
+  <script>
+    let previousAvg1 = null;
+    let previousAvg2 = null;
+    let previousAvgHumidity1 = null;
+    let previousAvgHumidity2 = null;
+    let previousAvgLight1 = null;
+    let previousAvgLight2 = null;
+  
+    const dataPoints1 = [];
+    const dataPoints2 = [];
+    const dataPointsHumidity1 = [];
+    const dataPointsHumidity2 = [];
+    const dataPointsLight1 = [];
+    const dataPointsLight2 = [];
+  
+    async function fetchData() {
+        try {
+            const response = await fetch('http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/sensor-data'); //http://10.196.133.61:5000/sensor-data
+            const data = await response.json();
+            return {
+                temperature: parseFloat(data.temperature),
+                humidity: parseFloat(data.humidity),
+                lux: parseFloat(data.lux)
+            };
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            return null;
+        }
+    }
+  
+    function calculateAverage(arr) {
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+  
+    function arrowForChange(current, prev) {
+        if (prev === null) return "";
+        if (current > prev) return " ↑";
+        if (current < prev) return " ↓";
+        return "";
+    }
+  
+    async function monitor() {
+        const data = await fetchData();
+        if (data === null) return;
+  
+        const { temperature, humidity, lux } = data;
+  
+        // ---- Temperature Range 1 ----
+        dataPoints1.push(temperature);
+        if (dataPoints1.length === 3) {
+            const currentAvg1 = calculateAverage(dataPoints1);
+            if (previousAvg1 !== null) {
+                const difference1 = Math.abs(currentAvg1 - previousAvg1);
+                const lower1 = parseFloat(document.getElementById('lowerRange1').value);
+                const higher1 = parseFloat(document.getElementById('higherRange1').value);
+                const threshold1 = parseFloat(document.getElementById('threshold1').value);
+  
+                if ((currentAvg1 < lower1 || currentAvg1 > higher1) || difference1 >= threshold1) {
+                    const trend = difference1 >= threshold1 ? arrowForChange(currentAvg1, previousAvg1) : "";
+                    document.getElementById('report1').innerText =
+                      `Alert for Range 1 (Temp): Avg Temp is ${currentAvg1.toFixed(2)} °C, changed by ${difference1.toFixed(2)} °C${trend}`;
+                }
+            } else {
+                // Out-of-range alert even on first average (no "changed by")
+                const lower1 = parseFloat(document.getElementById('lowerRange1').value);
+                const higher1 = parseFloat(document.getElementById('higherRange1').value);
+                if (currentAvg1 < lower1 || currentAvg1 > higher1) {
+                    document.getElementById('report1').innerText =
+                      `Alert for Range 1 (Temp): Avg Temp is ${currentAvg1.toFixed(2)} °C, changed by ${Math.abs(0 - 0).toFixed(2)} °C`;
+                }
+            }
+            previousAvg1 = currentAvg1;
+            dataPoints1.length = 0;
+        }
+  
+        // ---- Temperature Range 2 ----
+        dataPoints2.push(temperature);
+        if (dataPoints2.length === 3) {
+            const currentAvg2 = calculateAverage(dataPoints2);
+            if (previousAvg2 !== null) {
+                const difference2 = Math.abs(currentAvg2 - previousAvg2);
+                const lower2 = parseFloat(document.getElementById('lowerRange2').value);
+                const higher2 = parseFloat(document.getElementById('higherRange2').value);
+                const threshold2 = parseFloat(document.getElementById('threshold2').value);
+  
+                if ((currentAvg2 < lower2 || currentAvg2 > higher2) || difference2 >= threshold2) {
+                    const trend = difference2 >= threshold2 ? arrowForChange(currentAvg2, previousAvg2) : "";
+                    document.getElementById('report2').innerText =
+                      `Alert for Range 2 (Temp): Avg Temp is ${currentAvg2.toFixed(2)} °C, changed by ${difference2.toFixed(2)} °C${trend}`;
+                }
+            } else {
+                const lower2 = parseFloat(document.getElementById('lowerRange2').value);
+                const higher2 = parseFloat(document.getElementById('higherRange2').value);
+                if (currentAvg2 < lower2 || currentAvg2 > higher2) {
+                    document.getElementById('report2').innerText =
+                      `Alert for Range 2 (Temp): Avg Temp is ${currentAvg2.toFixed(2)} °C, changed by ${Math.abs(0 - 0).toFixed(2)} °C`;
+                }
+            }
+            previousAvg2 = currentAvg2;
+            dataPoints2.length = 0;
+        }
+  
+        // ---- Humidity Range 1 ----
+        dataPointsHumidity1.push(humidity);
+        if (dataPointsHumidity1.length === 3) {
+            const currentAvgHumidity1 = calculateAverage(dataPointsHumidity1);
+            if (previousAvgHumidity1 !== null) {
+                const differenceHumidity1 = Math.abs(currentAvgHumidity1 - previousAvgHumidity1);
+                const lowerHumidity1 = parseFloat(document.getElementById('lowerHumidity1').value);
+                const higherHumidity1 = parseFloat(document.getElementById('higherHumidity1').value);
+                const thresholdHumidity1 = parseFloat(document.getElementById('thresholdHumidity1').value);
+  
+                if ((currentAvgHumidity1 < lowerHumidity1 || currentAvgHumidity1 > higherHumidity1) || differenceHumidity1 >= thresholdHumidity1) {
+                    const trend = differenceHumidity1 >= thresholdHumidity1 ? arrowForChange(currentAvgHumidity1, previousAvgHumidity1) : "";
+                    document.getElementById('humidityReport1').innerText =
+                      `Alert for Range 1 (Humidity): Avg Humidity is ${currentAvgHumidity1.toFixed(2)} %, changed by ${differenceHumidity1.toFixed(2)} %${trend}`;
+                }
+            } else {
+                const lowerHumidity1 = parseFloat(document.getElementById('lowerHumidity1').value);
+                const higherHumidity1 = parseFloat(document.getElementById('higherHumidity1').value);
+                if (currentAvgHumidity1 < lowerHumidity1 || currentAvgHumidity1 > higherHumidity1) {
+                    document.getElementById('humidityReport1').innerText =
+                      `Alert for Range 1 (Humidity): Avg Humidity is ${currentAvgHumidity1.toFixed(2)} %, changed by ${Math.abs(0 - 0).toFixed(2)} %`;
+                }
+            }
+            previousAvgHumidity1 = currentAvgHumidity1;
+            dataPointsHumidity1.length = 0;
+        }
+  
+        // ---- Humidity Range 2 ----
+        dataPointsHumidity2.push(humidity);
+        if (dataPointsHumidity2.length === 3) {
+            const currentAvgHumidity2 = calculateAverage(dataPointsHumidity2);
+            if (previousAvgHumidity2 !== null) {
+                const differenceHumidity2 = Math.abs(currentAvgHumidity2 - previousAvgHumidity2);
+                const lowerHumidity2 = parseFloat(document.getElementById('lowerHumidity2').value);
+                const higherHumidity2 = parseFloat(document.getElementById('higherHumidity2').value);
+                const thresholdHumidity2 = parseFloat(document.getElementById('thresholdHumidity2').value);
+  
+                if ((currentAvgHumidity2 < lowerHumidity2 || currentAvgHumidity2 > higherHumidity2) || differenceHumidity2 >= thresholdHumidity2) {
+                    const trend = differenceHumidity2 >= thresholdHumidity2 ? arrowForChange(currentAvgHumidity2, previousAvgHumidity2) : "";
+                    document.getElementById('humidityReport2').innerText =
+                      `Alert for Range 2 (Humidity): Avg Humidity is ${currentAvgHumidity2.toFixed(2)} %, changed by ${differenceHumidity2.toFixed(2)} %${trend}`;
+                }
+            } else {
+                const lowerHumidity2 = parseFloat(document.getElementById('lowerHumidity2').value);
+                const higherHumidity2 = parseFloat(document.getElementById('higherHumidity2').value);
+                if (currentAvgHumidity2 < lowerHumidity2 || currentAvgHumidity2 > higherHumidity2) {
+                    document.getElementById('humidityReport2').innerText =
+                      `Alert for Range 2 (Humidity): Avg Humidity is ${currentAvgHumidity2.toFixed(2)} %, changed by ${Math.abs(0 - 0).toFixed(2)} %`;
+                }
+            }
+            previousAvgHumidity2 = currentAvgHumidity2;
+            dataPointsHumidity2.length = 0;
+        }
+  
+        // ---- Light Range 1 ----
+        dataPointsLight1.push(lux);
+        if (dataPointsLight1.length === 3) {
+            const currentAvgLight1 = calculateAverage(dataPointsLight1);
+            if (previousAvgLight1 !== null) {
+                const differenceLight1 = Math.abs(currentAvgLight1 - previousAvgLight1);
+                const lowerLight1 = parseFloat(document.getElementById('lowerLight1').value);
+                const higherLight1 = parseFloat(document.getElementById('higherLight1').value);
+                const thresholdLight1 = parseFloat(document.getElementById('thresholdLight1').value);
+  
+                if ((currentAvgLight1 < lowerLight1 || currentAvgLight1 > higherLight1) || differenceLight1 >= thresholdLight1) {
+                    const trend = differenceLight1 >= thresholdLight1 ? arrowForChange(currentAvgLight1, previousAvgLight1) : "";
+                    document.getElementById('lightReport1').innerText =
+                      `Alert for Range 1 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, changed by ${differenceLight1.toFixed(2)} lux${trend}`;
+                }
+            } else {
+                const lowerLight1 = parseFloat(document.getElementById('lowerLight1').value);
+                const higherLight1 = parseFloat(document.getElementById('higherLight1').value);
+                if (currentAvgLight1 < lowerLight1 || currentAvgLight1 > higherLight1) {
+                    document.getElementById('lightReport1').innerText =
+                      `Alert for Range 1 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, changed by ${Math.abs(0 - 0).toFixed(2)} lux`;
+                }
+            }
+            previousAvgLight1 = currentAvgLight1;
+            dataPointsLight1.length = 0;
+        }
+  
+        // ---- Light Range 2 ----
+        dataPointsLight2.push(lux);
+        if (dataPointsLight2.length === 3) {
+            const currentAvgLight2 = calculateAverage(dataPointsLight2);
+            if (previousAvgLight2 !== null) {
+                const differenceLight2 = Math.abs(currentAvgLight2 - previousAvgLight2);
+                const lowerLight2 = parseFloat(document.getElementById('lowerLight2').value);
+                const higherLight2 = parseFloat(document.getElementById('higherLight2').value);
+                const thresholdLight2 = parseFloat(document.getElementById('thresholdLight2').value);
+  
+                if ((currentAvgLight2 < lowerLight2 || currentAvgLight2 > higherLight2) || differenceLight2 >= thresholdLight2) {
+                    const trend = differenceLight2 >= thresholdLight2 ? arrowForChange(currentAvgLight2, previousAvgLight2) : "";
+                    document.getElementById('lightReport2').innerText =
+                      `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, changed by ${differenceLight2.toFixed(2)} lux${trend}`;
+                }
+            } else {
+                const lowerLight2 = parseFloat(document.getElementById('lowerLight2').value);
+                const higherLight2 = parseFloat(document.getElementById('higherLight2').value);
+                if (currentAvgLight2 < lowerLight2 || currentAvgLight2 > higherLight2) {
+                    document.getElementById('lightReport2').innerText =
+                      `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, changed by ${Math.abs(0 - 0).toFixed(2)} lux`;
+                }
+            }
+            previousAvgLight2 = currentAvgLight2;
+            dataPointsLight2.length = 0;
+        }
+    }
+  
+    function startMonitoring() {
+        document.getElementById('report1').innerText = '';
+        document.getElementById('report2').innerText = '';
+        document.getElementById('humidityReport1').innerText = '';
+        document.getElementById('humidityReport2').innerText = '';
+        document.getElementById('lightReport1').innerText = '';
+        document.getElementById('lightReport2').innerText = '';
+        document.getElementById('normalMessage').innerText = 'Monitoring started...';
+        setInterval(monitor, 60000);
+    }
+  
+    document.getElementById('monitorButton').addEventListener('click', startMonitoring);
+  </script>
+  
+  <!-- <script>
+    // ---------- Utilities ----------
+    const $ = (id) => document.getElementById(id);
+    const getNum = (id) => {
+      const v = parseFloat($(id).value);
+      return Number.isFinite(v) ? v : NaN;
+    };
+    const within = (x, lo, hi) => x >= lo && x <= hi;
+    const anyAlertVisible = () => {
+      const ids = ["report1","report2","humidityReport1","humidityReport2","lightReport1","lightReport2"];
+      return ids.some(id => $(id).textContent.trim().length > 0);
+    };
+
+    // Robust fetch with timeout to avoid hanging
+    async function fetchWithTimeout(resource, options = {}) {
+      const { timeout = 10000 } = options;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const resp = await fetch(resource, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return resp;
+      } catch (e) {
+        clearTimeout(id);
+        throw e;
+      }
+    }
+
+    async function fetchData(){
+      try{
+        const r = await fetchWithTimeout('http://10.196.133.61:5000/sensor-data', { timeout: 10000 });
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = await r.json();
+        const temperature = parseFloat(d.temperature);
+        const humidity = parseFloat(d.humidity);
+        const lux = parseFloat(d.lux);
+
+        if(!Number.isFinite(temperature) || !Number.isFinite(humidity) || !Number.isFinite(lux)){
+          throw new Error("Non-numeric sensor value received");
+        }
+        return { temperature, humidity, lux };
+      }catch(e){
+        console.error("Fetch error:", e);
+        $('statusLabel').textContent = `Error fetching data: ${e.message ?? e}`;
+        return null;
+      }
+    }
+
+    function average(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+
+    // ---------- State (rolling windows + previous averages per range) ----------
+    const windows = {
+      temperature: [],
+      humidity: [],
+      light: []
+    };
+
+    const prevAvg = {
+      temperature: { r1: null, r2: null },
+      humidity: { r1: null, r2: null },
+      light: { r1: null, r2: null }
+    };
+
+    let monitorTimer = null;
+
+    // Validate user inputs for each range (low < high, thresholds >= 0)
+    function validateInputs(){
+      const checks = [
+        ["lowerRange1","higherRange1","threshold1"],
+        ["lowerRange2","higherRange2","threshold2"],
+        ["lowerHumidity1","higherHumidity1","thresholdHumidity1"],
+        ["lowerHumidity2","higherHumidity2","thresholdHumidity2"],
+        ["lowerLight1","higherLight1","thresholdLight1"],
+        ["lowerLight2","higherLight2","thresholdLight2"],
+      ];
+
+      for(const [loId, hiId, thId] of checks){
+        const lo = getNum(loId), hi = getNum(hiId), th = getNum(thId);
+        if(!Number.isFinite(lo) || !Number.isFinite(hi) || !Number.isFinite(th)){
+          return `All inputs must be numeric. Problem at ${loId}/${hiId}/${thId}.`;
+        }
+        if(lo >= hi){
+          return `Lower bound must be less than upper bound for ${loId} / ${hiId}.`;
+        }
+        if(th < 0){
+          return `Threshold must be ≥ 0 for ${thId}.`;
+        }
+      }
+      return null;
+    }
+
+    // Compare a computed average against a range+threshold; update report only on alert condition
+    function evaluateAndReport(metric, avg, prevKey, loId, hiId, thId, reportId, unitLabel){
+      const lo = getNum(loId);
+      const hi = getNum(hiId);
+      const th = getNum(thId);
+      const prev = prevAvg[metric][prevKey];
+
+      let shouldAlert = false;
+      let diffText = "";
+
+      if(prev !== null && Number.isFinite(prev)){
+        const diff = Math.abs(avg - prev);
+        if(diff >= th) {
+          shouldAlert = true;
+          diffText = `, changed by ${diff.toFixed(2)} ${unitLabel}`;
+        }
+      }
+      if(!within(avg, lo, hi)){
+        shouldAlert = true;
+      }
+
+      if(shouldAlert){
+        $(reportId).textContent =
+          `Alert for ${metric.charAt(0).toUpperCase()+metric.slice(1)} (Range ${prevKey === 'r1' ? '1' : '2'}): ` +
+          `Avg = ${avg.toFixed(2)} ${unitLabel} (Range ${lo}–${hi} ${unitLabel})${diffText}`;
+      }
+
+      // Update previous average for this range
+      prevAvg[metric][prevKey] = avg;
+    }
+
+    async function monitorTick(){
+      const data = await fetchData();
+      if(!data) return;
+
+      $('statusLabel').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+
+      // Push current readings
+      windows.temperature.push(data.temperature);
+      windows.humidity.push(data.humidity);
+      windows.light.push(data.lux);
+
+      // Only evaluate when we have exactly 3 readings per metric
+      const ready =
+        windows.temperature.length === 3 &&
+        windows.humidity.length === 3 &&
+        windows.light.length === 3;
+
+      if(!ready) return;
+
+      // Compute averages
+      const avgT = average(windows.temperature);
+      const avgH = average(windows.humidity);
+      const avgL = average(windows.light);
+
+      // Evaluate Temperature against both ranges
+      evaluateAndReport('temperature', avgT, 'r1', 'lowerRange1','higherRange1','threshold1','report1','°C');
+      evaluateAndReport('temperature', avgT, 'r2', 'lowerRange2','higherRange2','threshold2','report2','°C');
+
+      // Evaluate Humidity against both ranges
+      evaluateAndReport('humidity', avgH, 'r1', 'lowerHumidity1','higherHumidity1','thresholdHumidity1','humidityReport1','%');
+      evaluateAndReport('humidity', avgH, 'r2', 'lowerHumidity2','higherHumidity2','thresholdHumidity2','humidityReport2','%');
+
+      // Evaluate Light against both ranges
+      evaluateAndReport('light', avgL, 'r1', 'lowerLight1','higherLight1','thresholdLight1','lightReport1','lux');
+      evaluateAndReport('light', avgL, 'r2', 'lowerLight2','higherLight2','thresholdLight2','lightReport2','lux');
+
+      // Reset windows after evaluation
+      windows.temperature.length = 0;
+      windows.humidity.length = 0;
+      windows.light.length = 0;
+
+      // Normal message toggling
+      $('normalMessage').textContent = anyAlertVisible()
+        ? 'Monitoring… alerts shown above as they occur.'
+        : 'All readings within ranges and below thresholds. Monitoring…';
+    }
+
+    function startMonitoring(){
+      // Clear previous outputs, keep historical alerts if desired — here we clear to start a fresh session.
+      ['report1','report2','humidityReport1','humidityReport2','lightReport1','lightReport2']
+        .forEach(id => $(id).textContent = '');
+      $('normalMessage').textContent = 'Monitoring started… awaiting 3 readings for the first evaluation.';
+      $('statusLabel').textContent = '';
+
+      // Reset state
+      windows.temperature.length = 0;
+      windows.humidity.length = 0;
+      windows.light.length = 0;
+      prevAvg.temperature.r1 = prevAvg.temperature.r2 = null;
+      prevAvg.humidity.r1 = prevAvg.humidity.r2 = null;
+      prevAvg.light.r1 = prevAvg.light.r2 = null;
+
+      // Validate inputs before starting
+      const err = validateInputs();
+      if(err){
+        $('normalMessage').textContent = `⚠️ ${err}`;
+        return;
+      }
+
+      // Debounce intervals
+      if(monitorTimer) clearInterval(monitorTimer);
+      // One reading every minute; averages are computed every 3 minutes (after 3 readings)
+      monitorTimer = setInterval(monitorTick, 60000);
+      // Kick off an immediate tick so users don't have to wait a full minute for the first sample
+      (async () => { await monitorTick(); })();
+    }
+
+    $('monitorButton').addEventListener('click', startMonitoring);
+  </script> -->
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold Setup with Range</title>
+    <style>
+        :root{
+            --bg-cream:#f7f6f2;
+            --bg-blue-soft:#eaf3fb;
+            --bg-green-soft:#eef8f3;
+            --card:#ffffff;
+            --stroke:#dfe7ee;
+            --txt:#243447;
+            --txt-muted:#5b6b7a;
+            --accent:#3aa0c8;
+            --accent-2:#46b57a;
+            --accent-3:#f4e9d8;
+            --shadow:0 6px 18px rgba(28, 55, 90, 0.08);
+            --radius:16px;
+        }
+
+        html,body{height:100%;}
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--txt);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, var(--bg-blue-soft), transparent 60%),
+                radial-gradient(900px 500px at 110% 10%, var(--bg-green-soft), transparent 60%),
+                radial-gradient(600px 300px at -10% 110%, var(--accent-3), transparent 60%),
+                var(--bg-cream);
+            margin: 0;
+            padding: 0;
+            line-height: 1.45;
+        }
+
+        .page{
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* Header with title + back button */
+        .header {
+            padding: 24px 24px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1{
+            margin: 0;
+            padding: 16px 10px;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, #ffffff, #f6fbff 40%, #f3fff8 100%);
+            border: 1px solid var(--stroke);
+            box-shadow: var(--shadow);
+            color: var(--txt);
+            letter-spacing: 0.5px;
+            flex: 1;
+        }
+
+        .back-btn {
+            margin-left: 16px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid #bfe7f7;
+            background: linear-gradient(135deg, #eaf7ff, #e6fff4);
+            color: #0f4a64;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            transition: 0.2s ease;
+        }
+        .back-btn:hover {
+            filter: brightness(1.05);
+            background: linear-gradient(135deg, #dff3ff, #dcffe8);
+        }
+        .back-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Two-column layout */
+        .layout{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 8px 24px 24px;
+        }
+        .left { min-height: 0; }
+        .right {
+            min-height: 0;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 14px;
+        }
+
+        h2{
+            margin: 18px 0 10px;
+            color: var(--txt);
+            letter-spacing: 0.3px;
+            position: relative;
+            padding-left: 12px;
+        }
+        h2::before{
+            content:"";
+            position:absolute;
+            left:0; top: 6px; bottom: 6px;
+            width:6px;
+            border-radius:6px;
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+            opacity: .85;
+        }
+
+        .container{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        label{
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--txt-muted);
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+            border: 1px solid var(--stroke);
+            padding: 10px 12px;
+            border-radius: 12px;
+        }
+        input{
+            padding: 12px 10px;
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            outline: none;
+            transition: box-shadow .2s ease, border-color .2s ease;
+            background: #fff;
+            color: var(--txt);
+        }
+        input:focus{
+            border-color: #b7e3ff;
+            box-shadow: 0 0 0 4px rgba(63, 163, 222, 0.18);
+        }
+
+        .controls{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+        }
+        button{
+            padding: 12px 16px;
+            border: 1px solid #bfe7f7;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #eaf7ff, #e6fff4);
+            color: #0f4a64;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: 0.2s ease;
+        }
+        button:hover{ filter: brightness(1.03); }
+        button:active{
+            transform: translateY(1px);
+            background: linear-gradient(135deg, #cfeeff, #d7ffe9);
+        }
+
+        /* Unified Output Panel */
+        .output-panel{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 12px 16px;
+            overflow: auto;
+        }
+        #report1:empty, #report2:empty,
+        #humidityReport1:empty, #humidityReport2:empty,
+        #lightReport1:empty, #lightReport2:empty {
+            display: none;
+        }
+        #report1, #report2, #humidityReport1, #humidityReport2, #lightReport1, #lightReport2{
+            margin: 0;
+            padding: 10px 0;
+            border-top: 1px dashed #cfe8d9;
+            color: #1b6b42;
+            font-weight: 700;
+        }
+        .output-panel > div:not(:empty):first-child{
+            border-top: none;
+            padding-top: 0;
+        }
+        #normalMessage{
+            margin: 8px 0 0 0;
+            padding: 10px 0 0 0;
+            border-top: 1px dashed #dfe7ee;
+            color: #1b4b7a;
+            font-weight: 600;
+        }
+        #report1::before, #report2::before,
+        #humidityReport1::before, #humidityReport2::before,
+        #lightReport1::before, #lightReport2::before{
+            content: "✔ ";
+            color: var(--accent-2);
+        }
+
+        .note{
+            margin: 10px 24px 24px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid #efe2c9;
+            background: linear-gradient(180deg, #fffaf0, #ffffff);
+            color: #6b5b3a;
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 900px){
+            .layout{ grid-template-columns: 1fr; }
+        }
+        @media (max-width: 520px){
+            .header{ flex-direction: column; align-items: stretch; }
+            .back-btn{ margin-left: 0; margin-top: 10px; align-self: flex-end; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <h1>SmartComfort</h1>
+            <a href="main.html" class="back-btn">🔙 Back to Live Page</a>
+        </div>
+
+        <div class="layout">
+            <div class="left">
+                <h2>Temperature</h2>
+                <div class="container">
+                    <label>Lower Temperature 1 (°C): <input type="number" id="lowerRange1" value="18"></label>
+                    <label>Higher Temperature 1 (°C): <input type="number" id="higherRange1" value="22"></label>
+                    <label>Threshold 1 (°C): <input type="number" id="threshold1" value="0.05"></label>
+                </div>
+                <div class="container">
+                    <label>Lower Temperature 2 (°C): <input type="number" id="lowerRange2" value="20"></label>
+                    <label>Higher Temperature 2 (°C): <input type="number" id="higherRange2" value="24"></label>
+                    <label>Threshold 2 (°C): <input type="number" id="threshold2" value="0.5"></label>
+                </div>
+
+                <h2>Humidity</h2>
+                <div class="container">
+                    <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="38"></label>
+                    <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="60"></label>
+                    <label>Threshold 1 (%): <input type="number" id="thresholdHumidity1" value="5"></label>
+                </div>
+                <div class="container">
+                    <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="42"></label>
+                    <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="58"></label>
+                    <label>Threshold 2 (%): <input type="number" id="thresholdHumidity2" value="10"></label>
+                </div>
+
+                <h2>Light</h2>
+                <div class="container">
+                    <label>Lower Light 1 (%): <input type="number" id="lowerLight1" value="90"></label>
+                    <label>Higher Light 1 (%): <input type="number" id="higherLight1" value="120"></label>
+                    <label>Threshold 1 (%): <input type="number" id="thresholdLight1" value="5"></label>
+                </div>
+                <div class="container">
+                    <label>Lower Light 2 (%): <input type="number" id="lowerLight2" value="1000"></label>
+                    <label>Higher Light 2 (%): <input type="number" id="higherLight2" value="12000"></label>
+                    <label>Threshold 2 (%): <input type="number" id="thresholdLight2" value="10"></label>
+                </div>
+            </div>
+
+            <div class="right">
+                <div class="controls">
+                    <button id="monitorButton" onclick="startMonitoring()">Start Monitoring</button>
+                </div>
+
+                <div class="output-panel">
+                    <div id="report1"></div>
+                    <div id="report2"></div>
+                    <div id="humidityReport1"></div>
+                    <div id="humidityReport2"></div>
+                    <div id="lightReport1"></div>
+                    <div id="lightReport2"></div>
+                    <div id="normalMessage">No changes detected yet...</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="note">
+            <strong>Note:</strong> Output appears only if the temperature average is outside the set range or the change exceeds the specified threshold. Otherwise, the system remains silent and continues monitoring.
+        </p>
+    </div>
+
+    <script>
+        /* --- Your JavaScript logic unchanged --- */
+        let previousAvg1=null, previousAvg2=null, previousAvgHumidity1=null, previousAvgHumidity2=null, previousAvgLight1=null, previousAvgLight2=null;
+        const dataPoints1=[], dataPoints2=[], dataPointsHumidity1=[], dataPointsHumidity2=[], dataPointsLight1=[], dataPointsLight2=[];
+        async function fetchData(){try{const r=await fetch('http://10.196.133.61:5000/sensor-data');const d=await r.json();return{temperature:parseFloat(d.temperature),humidity:parseFloat(d.humidity),lux:parseFloat(d.lux)}}catch(e){console.error('Error:',e);return null}}
+        function calculateAverage(a){return a.reduce((x,y)=>x+y,0)/a.length;}
+        async function monitor(){
+            const data=await fetchData(); if(!data)return;
+            const {temperature,humidity,lux}=data;
+            function handlePoints(points,prevId,lowerId,higherId,thresholdId,reportId,label){
+                points.push(data[label.toLowerCase()]);
+                if(points.length===3){
+                    const avg=calculateAverage(points);
+                    const prev=eval(prevId);
+                    if(prev!==null){
+                        const diff=Math.abs(avg-prev);
+                        const lower=parseFloat(document.getElementById(lowerId).value);
+                        const higher=parseFloat(document.getElementById(higherId).value);
+                        const threshold=parseFloat(document.getElementById(thresholdId).value);
+                        if((avg<lower||avg>higher)||diff>=threshold){
+                            document.getElementById(reportId).innerText=`Alert for ${label}: Avg ${label} is ${avg.toFixed(2)}, changed by ${diff.toFixed(2)}`;
+                        }
+                    }
+                    eval(prevId+"=avg;"); points.length=0;
+                }
+            }
+        }
+        function startMonitoring(){
+            document.getElementById('report1').innerText='';
+            document.getElementById('report2').innerText='';
+            document.getElementById('normalMessage').innerText='Monitoring started...';
+            setInterval(monitor,60000);
+        }
+    </script>
+</body>
+</html> -->

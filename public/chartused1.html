@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Sensor Chart - SmartComfort</title>
+  <style>
+    :root{
+      --bg-cream:#f7f6f2;
+      --bg-blue-soft:#eaf3fb;
+      --bg-green-soft:#eef8f3;
+      --card:#ffffff;
+      --stroke:#dfe7ee;
+      --txt:#1f2a37;
+      --txt-muted:#5b6b7a;
+      --accent:#1f7ae0;
+      --accent-2:#31a46b;
+      --shadow:0 18px 38px rgba(28,55,90,.18);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif; /* ✅ reverted to your original font */
+      margin: 0;
+      padding: 24px;
+      color: var(--txt);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--bg-blue-soft), transparent 60%),
+        radial-gradient(1200px 800px at 110% 20%, var(--bg-green-soft), transparent 60%),
+        linear-gradient(180deg, var(--bg-cream), #eef2f3 60%, var(--bg-cream));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+
+    .header-row{
+      width: min(1600px, 98vw);
+      display: flex;
+      align-items: center;
+      justify-content: center; /* ✅ center title only */
+      gap: 12px;
+      background: linear-gradient(180deg, var(--card), #f9fbfd);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      padding: 12px 20px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--txt);
+      letter-spacing: .2px;
+      font-weight: 700;
+      font-size: clamp(18px, 2.6vw, 26px);
+      line-height: 1.1;
+    }
+
+    h1::after{
+      content:"";
+      display:block;
+      width: 120px;
+      height: 4px;
+      margin: 8px auto 0 auto;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      opacity: .8;
+    }
+
+    /* Elegant chart container */
+    #sensorChart {
+      display: block;
+      margin: 0 auto;
+      background-color: var(--card);
+      border: 1px solid #cfd8e0;
+      border-radius: 22px;
+      box-shadow: 0 14px 40px rgba(28,55,90,.18), inset 0 0 10px rgba(255,255,255,.3);
+      width: min(1600px, 98vw);
+      height: calc(100vh - 140px) !important; /* increased by +20px */
+      max-height: 940px;
+      min-height: 520px;
+      padding: 8px;
+    }
+
+    canvas { 
+      image-rendering: -webkit-optimize-contrast;
+      border-radius: 18px;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--txt-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    @media (max-width: 480px){
+      body { padding: 16px; gap: 10px; }
+      .header-row{ width: 100%; flex-direction: column; }
+      #sensorChart{
+        height: calc(100vh - 150px) !important;
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <h1>📊 Live Sensor Data Graph</h1>
+  </div>
+
+  <canvas id="sensorChart" width="1600" height="820"></canvas>
+  <div class="note">Data points are recorded every 3 minutes.</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: '🌡️ Temperature (°C)', data: [], borderWidth: 3, fill: false },
+          { label: '💧 Humidity (%)', data: [], borderWidth: 3, fill: false },
+          { label: '🌬️ Pressure (hPa)', data: [], borderWidth: 3, fill: false },
+          { label: '🔥 Gas Resistance (Ω)', data: [], borderWidth: 3, fill: false },
+          { label: '💡 Ambient Light (lux)', data: [], borderWidth: 3, fill: false },
+          { label: '🟣 Violet', data: [], borderWidth: 3, fill: false },
+          { label: '🔵 Blue', data: [], borderWidth: 3, fill: false },
+          { label: '🟢 Green', data: [], borderWidth: 3, fill: false },
+          { label: '🟡 Yellow', data: [], borderWidth: 3, fill: false },
+          { label: '🟠 Orange', data: [], borderWidth: 3, fill: false },
+          { label: '🔴 Red', data: [], borderWidth: 3, fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              boxWidth: 16,
+              boxHeight: 8,
+              padding: 10,
+              color: '#1f2a37',
+              font: { size: 13, family: 'Arial' } /* ✅ revert to Arial */
+            }
+          },
+          title: {
+            display: true,
+            text: 'SmartComfort - Real-Time Sensor Readings',
+            font: { size: 16, weight: 'bold', family: 'Arial' },
+            color: '#1f2a37'
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#e3e8ef' },
+            title: { display: true, text: 'Time', color: '#1f2a37' }
+          },
+          y: {
+            grid: { color: '#e3e8ef' },
+            title: { display: true, text: 'Sensor Values', color: '#1f2a37' }
+          }
+        }
+      }
+    });
+
+    async function fetchAndUpdate() {
+      try {
+        const res = await fetch('http://10.196.133.61:5000/sensor-data');
+        const data = await res.json();
+
+        const time = data.timestamp;
+        const maxPoints = 20;
+
+        chart.data.labels.push(time);
+        if (chart.data.labels.length > maxPoints) chart.data.labels.shift();
+
+        const values = [
+          data.temperature,
+          data.humidity,
+          data.pressure,
+          data.gas_resistance,
+          data.lux,
+          data.violet,
+          data.blue,
+          data.green,
+          data.yellow,
+          data.orange,
+          data.red
+        ];
+
+        chart.data.datasets.forEach((ds, i) => {
+          ds.data.push(values[i]);
+          if (ds.data.length > maxPoints) ds.data.shift();
+        });
+
+        chart.update();
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    }
+
+    fetchAndUpdate();
+    setInterval(fetchAndUpdate, 180000); // every 3 minutes
+  </script>
+</body>
+</html>
