@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="ensure.js"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>CSV Details — SmartComfort</title>
+  <style>
+    :root{
+      --bg:#f7f9fc; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
+      --brand:#0ea5e9; --radius:14px; --shadow:0 10px 24px rgba(0,0,0,.08);
+    }
+    a.dl { display:inline-flex; align-items:center; padding:4px; border-radius:8px }
+    a.dl:hover { background:#f3f4f6 }
+    a.dl svg { vertical-align:middle; }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;color:var(--text);background:var(--bg)}
+    .wrap{max-width:1200px;margin:40px auto;padding:0 16px}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    h1{margin:0 0 6px}
+    .muted{color:var(--muted);font-size:.95rem}
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0}
+    .toolbar input[type="text"]{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;min-width:260px}
+    .btn{padding:10px 14px;border:1px solid #e5e7eb;background:#fff;border-radius:10px;cursor:pointer}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn:active{transform:translateY(1px)}
+    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px}
+    th, td{padding:10px 12px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.95rem;vertical-align:top}
+    th{position:sticky;top:0;background:linear-gradient(#fff,#f8fafc);z-index:1;cursor:pointer}
+    tr:hover td{background:#fafbff}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.8rem;background:#eef6ff}
+    .right{float:right}
+    .nowrap{white-space:nowrap}
+    .footer{margin-top:16px;color:var(--muted);font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>CSV Details</h1>
+      <div class="muted" id="metaLine">Loading…</div>
+
+      <div class="toolbar">
+        <input type="text" id="filterBox" placeholder="Filter by filename… (e.g., fenster, sensor_data)"/>
+        <button class="btn" id="clearFilterBtn">Clear</button>
+        <button class="btn" id="refreshBtn" title="Rescan directory">Refresh</button>
+        <a class="btn primary" id="dlBtn" href="#" title="Download latest summary CSV">Download Summary CSV</a>
+        <span class="right muted" id="status"></span>
+      </div>
+
+      <div style="overflow:auto; max-height:68vh; border:1px solid #eef2f7; border-radius:12px;">
+        <table id="csvTable">
+          <thead>
+            <tr>
+              <th data-k="file">File</th>
+              <th data-k="rows" class="nowrap">Rows</th>
+              <th data-k="cols" class="nowrap">Cols</th>
+              <th data-k="first_col">First Column</th>
+              <th data-k="start" class="nowrap">Start</th>
+              <th data-k="end" class="nowrap">End</th>
+              <th data-k="duration" class="nowrap">Duration</th>
+              <th data-k="size_kb" class="nowrap">Size (KB)</th>
+              <th class="nowrap">Download</th>
+            </tr>
+          </thead>
+          <tbody id="csvBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footer" id="footerNote">—</div>
+    </div>
+  </div>
+
+  <script>
+    // EC2 API base (HTTP). If you later add HTTPS/NGINX, change to https://yourdomain.
+    const API_BASE = 'http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:5000';
+
+    const metaLine = document.getElementById('metaLine');
+    const statusEl = document.getElementById('status');
+    const bodyEl = document.getElementById('csvBody');
+    const tableEl = document.getElementById('csvTable');
+    const filterBox = document.getElementById('filterBox');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const footerNote = document.getElementById('footerNote');
+    const dlBtn = document.getElementById('dlBtn');
+
+    dlBtn.href = `${API_BASE}/download/csv-summary`;
+
+    let rawData = [];
+    let sortKey = 'file';
+    let sortAsc = true;
+
+    function fmt(x){ return (x===null || x===undefined) ? '—' : String(x); }
+    function fmtTag(val){
+      if (val === null || val === undefined) return '<span class="pill">—</span>';
+      const n = Number(val);
+      if (isNaN(n)) return `<span class="pill">${val}</span>`;
+      return `<span class="pill">${n.toLocaleString()}</span>`;
+    }
+
+    function render(){
+      const q = filterBox.value.trim().toLowerCase();
+      let data = rawData;
+      if (q){ data = data.filter(r => (r.file || '').toLowerCase().includes(q)); }
+
+      data = [...data].sort((a,b)=>{
+        const av = a[sortKey], bv = b[sortKey];
+        if (av == null && bv != null) return sortAsc ? 1 : -1;
+        if (av != null && bv == null) return sortAsc ? -1 : 1;
+        if (av == null && bv == null) return 0;
+        if (['rows','cols','size_kb'].includes(sortKey)){
+          const an = Number(av), bn = Number(bv);
+          return sortAsc ? (an - bn) : (bn - an);
+        }
+        return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+      });
+
+      bodyEl.innerHTML = data.map(r => {
+        const enc = encodeURIComponent(r.file || "");
+        const href = `${API_BASE}/download/file?name=${enc}`;
+        const icon = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 20h14v-2H5v2zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1z"/>
+            </svg>`;
+        return `
+            <tr>
+            <td class="nowrap" title="${fmt(r.file)}">${fmt(r.file)}</td>
+            <td>${fmtTag(r.rows)}</td>
+            <td>${fmt(r.cols)}</td>
+            <td>${fmt(r.first_col)}</td>
+            <td class="nowrap">${fmt(r.start)}</td>
+            <td class="nowrap">${fmt(r.end)}</td>
+            <td class="nowrap">${fmt(r.duration)}</td>
+            <td class="nowrap">${Number(r.size_kb ?? 0).toLocaleString()}</td>
+            <td class="nowrap">
+                <a href="${href}" title="Download ${fmt(r.file)}" class="dl" target="_blank" rel="noopener" aria-label="Download ${fmt(r.file)}">
+                ${icon}
+                </a>
+            </td>
+            </tr>
+        `;
+        }).join('');
+
+
+      footerNote.textContent = `${data.length} file(s) shown`;
+    }
+
+    function attachSort(){
+      tableEl.querySelectorAll('th[data-k]').forEach(th=>{
+        th.addEventListener('click', ()=>{
+          const k = th.getAttribute('data-k');
+          if (sortKey === k){ sortAsc = !sortAsc; } else { sortKey = k; sortAsc = true; }
+          render();
+        });
+      });
+    }
+
+    async function load(refresh=false){
+      statusEl.textContent = 'Loading…';
+      try{
+        const url = `${API_BASE}/api/csv-summary${refresh ? '?refresh=1' : ''}`;
+        const res = await fetch(url);
+        if (!res.ok){ throw new Error((await res.text()) || res.statusText); }
+        const j = await res.json();
+        rawData = j.data || [];
+        metaLine.textContent = `Scanned "${j.meta?.dir}" with pattern "${j.meta?.pattern}" · Files: ${j.meta?.count ?? rawData.length} · Generated at ${j.meta?.generated_at || '—'}`;
+        statusEl.textContent = 'OK';
+        render();
+      }catch(err){
+        statusEl.textContent = 'Error';
+        metaLine.textContent = `Error: ${err.message}`;
+        bodyEl.innerHTML = '';
+      }
+    }
+
+    filterBox.addEventListener('input', render);
+    clearFilterBtn.addEventListener('click', ()=>{ filterBox.value=''; render(); });
+    refreshBtn.addEventListener('click', ()=> load(true));
+
+    attachSort();
+    load(false);
+  </script>
+</body>
+</html>
+
+
+<!--
+bodyEl.innerHTML = data.map(r => `
+        <tr>
+          <td class="nowrap" title="${fmt(r.file)}">${fmt(r.file)}</td>
+          <td>${fmtTag(r.rows)}</td>
+          <td>${fmt(r.cols)}</td>
+          <td>${fmt(r.first_col)}</td>
+          <td class="nowrap">${fmt(r.start)}</td>
+          <td class="nowrap">${fmt(r.end)}</td>
+          <td class="nowrap">${fmt(r.duration)}</td>
+          <td class="nowrap">${Number(r.size_kb ?? 0).toLocaleString()}</td>
+        </tr>
+      `).join('');
+-->

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secure Access — HIBE Portal</title>
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="Diplomatic-grade secure access portal." />
+
+  <style>
+    :root{
+      --bg:white;
+      --ink:#0f172a;           /* deep slate text */
+      --muted:#6b7280;         /* gray-500 */
+      --primary:#0ea5e9;       /* light blue */
+      --primary-weak:#e0f2fe;  /* sky-100 */
+      --accent:#34d399;        /* light green */
+      --cream:#f8f5ef;         /* light creamy */
+      --ring:#93c5fd;          /* ring color */
+      --error:#ef4444;
+      --ok:#16a34a;
+      --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    html,body{
+      height:100%;
+      background:
+        radial-gradient(1200px 600px at 10% 5%, var(--primary-weak) 0%, transparent 40%),
+        radial-gradient(900px 500px at 90% 10%, #d1fae5 0%, transparent 35%),
+        radial-gradient(1000px 600px at 50% 120%, var(--cream) 0%, transparent 40%),
+        var(--bg);
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrap{
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:32px 16px;
+    }
+
+    .card{
+      width:100%;
+      max-width: 480px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.88));
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(15,23,42,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      overflow: clip;
+    }
+
+    .card-header{
+      padding: 28px 28px 16px;
+      border-bottom: 1px solid rgba(15,23,42,.06);
+      display:flex; align-items:center; gap:14px;
+      background: linear-gradient(180deg, rgba(224,242,254,0.55), rgba(248,245,239,0.45));
+    }
+    .mark{
+      width:40px;height:40px;border-radius:12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 6px 18px rgba(14,165,233,.25);
+    }
+    .title{
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing:.3px;
+    }
+    .subtitle{
+      font-size:.9rem;color:var(--muted);margin-top:2px;
+    }
+
+    form{
+      padding: 22px 28px 28px;
+      display:grid;
+      gap:16px;
+    }
+
+    label{ font-size:.88rem; font-weight:600; color:#0b132b; margin-bottom:6px; display:block; }
+    .field{
+      display:flex; flex-direction:column;
+    }
+    .input, .sum-box, .readonly{
+      width:100%;
+      padding: 12px 14px;
+      font-size: 0.98rem;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius: 12px;
+      background: #fff;
+      outline: none;
+      transition: box-shadow .2s ease, border-color .2s ease, transform .02s ease;
+    }
+    .input:focus{
+      border-color: var(--ring);
+      box-shadow: 0 0 0 4px rgba(147,197,253,.35);
+    }
+    .readonly{
+      background: #f9fafb;
+      color:#1f2937;
+      font-weight:600;
+    }
+    .sum-row{
+      display:flex; gap:10px; align-items:center;
+    }
+    .sum-box{
+      text-align:center; font-variant-numeric: tabular-nums;
+      background:#fbfdff;
+    }
+    .equals{
+      padding:0 8px; color:var(--muted); font-weight:700;
+    }
+
+    .actions{
+      display:flex; gap:10px; align-items:center; margin-top:6px;
+    }
+
+    .btn{
+      flex:1;
+      cursor:pointer;
+      padding: 12px 16px;
+      font-weight:700;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background: linear-gradient(180deg, #e0f2fe, #c7f0df);
+      color:#0b5ea8;
+      transition: transform .04s ease, filter .2s ease, box-shadow .2s ease;
+      box-shadow: 0 6px 16px rgba(14,165,233,.18);
+      user-select:none;
+    }
+    .btn:hover{ filter:brightness(1.03); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.secondary{
+      flex:0 0 auto;
+      padding: 12px 14px;
+      background: #eef6ff;
+      color:#0b5ea8;
+      border:1px solid #cfe8ff;
+      box-shadow:none;
+    }
+
+    .notice{
+      font-size:.9rem; color:var(--muted);
+      text-align:center; margin-top:4px;
+    }
+    .status{
+      min-height:20px;
+      font-size:.92rem;
+      margin-top:4px;
+      text-align:center;
+      font-weight:600;
+    }
+    .status.error{ color: var(--error); }
+    .status.ok{ color: var(--ok); }
+
+    .footer{
+      padding: 14px 18px 22px;
+      text-align:center;
+      color:var(--muted);
+      font-size:.8rem;
+    }
+
+    .toggle-pass{
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      border:none; background:transparent; color:#0b5ea8; cursor:pointer; font-weight:700;
+    }
+    .password-wrap{ position:relative; }
+
+    /* subtle shake animation on error */
+    @keyframes shake {
+      10%, 90% { transform: translateX(-1px); }
+      20%, 80% { transform: translateX(2px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+    .shake{ animation: shake .35s linear both; }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce){
+      .btn, .input:focus{ transition: none; }
+      .shake{ animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" role="region" aria-label="Secure login panel">
+      <header class="card-header">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <div class="title">HIBE Secure Access</div>
+          <div class="subtitle">Fenster-grade login. Authorized personnel only.</div>
+        </div>
+      </header>
+
+      <form id="loginForm" novalidate>
+        <!-- Username (fixed and read-only) -->
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" class="readonly" value="HIBE-Admin-Access" readonly aria-readonly="true" />
+        </div>
+
+        <!-- Password (fixed, but user must enter it) -->
+        <div class="field password-wrap">
+          <label for="password">Password</label>
+          <input id="password" class="input" type="password" inputmode="text" autocomplete="current-password"
+                 placeholder="Enter password"
+                 aria-describedby="pw-hint"
+                 required />
+          <button type="button" class="toggle-pass" aria-pressed="false" aria-label="Show password" id="togglePass">Show</button>
+          <div id="pw-hint" class="notice">Hint: Case-sensitive. Contact your admin if unsure.</div>
+        </div>
+
+        <!-- 6-digit additions challenge -->
+        <div class="field">
+          <label>Security Check — Add the three numbers</label>
+          <div class="sum-row" aria-live="polite">
+            <input id="a" class="sum-box" type="text" readonly aria-label="First number" />
+            <span class="equals" aria-hidden="true">+</span>
+            <input id="b" class="sum-box" type="text" readonly aria-label="Second number" />
+            <span class="equals" aria-hidden="true">+</span>
+            <input id="c" class="sum-box" type="text" readonly aria-label="Third number" />
+            <span class="equals" aria-hidden="true">=</span>
+            <input id="sum" class="input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="?" aria-label="Enter sum" required />
+          </div>
+          <div class="actions">
+            <button type="button" class="btn secondary" id="regen" title="Generate a new set of numbers">New Numbers</button>
+            <button type="submit" class="btn" id="submitBtn">Enter Portal</button>
+          </div>
+          <div id="status" class="status" aria-live="polite"></div>
+        </div>
+      </form>
+
+      <div class="footer">
+        © <span id="year"></span> HIBE • Human & Intelligent Built Environment — All access control.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      "use strict";
+
+      // ====== CONFIG ======
+      const EXPECTED_USERNAME = "HIBE-Admin-Access";
+      const EXPECTED_PASSWORD = "HFensterI2B5E0LAB";
+
+      // TODO: REPLACE with your destination page after successful login:
+      // e.g., const DESTINATION = "dashboard.html";
+      const DESTINATION = "index.html"; /* 🔧 <-- PUT YOUR HTML FILE NAME HERE */
+
+      // ====== HELPERS ======
+      const $ = (id) => document.getElementById(id);
+      const usernameEl = $("username");
+      const passwordEl = $("password");
+      const aEl = $("a"), bEl = $("b"), cEl = $("c"), sumEl = $("sum");
+      const statusEl = $("status");
+      const form = $("loginForm");
+      const togglePassBtn = $("togglePass");
+      const regenBtn = $("regen");
+      const submitBtn = $("submitBtn");
+      const yearEl = $("year");
+
+      yearEl.textContent = new Date().getFullYear();
+
+      const sixDigit = () => {
+        // uniform 6-digit: 100000..999999
+        return Math.floor(100 + Math.random() * 900);
+      };
+
+      let A=0,B=0,C=0, TOTAL=0;
+      function generateNumbers(){
+        A = sixDigit(); B = sixDigit(); C = sixDigit();
+        TOTAL = A + B + C;
+        aEl.value = A.toString();
+        bEl.value = B.toString();
+        cEl.value = C.toString();
+        sumEl.value = "";
+        statusEl.textContent = "";
+        form.classList.remove("shake");
+      }
+
+      function showError(msg){
+        statusEl.textContent = msg;
+        statusEl.className = "status error";
+        form.classList.remove("shake");
+        // trigger reflow to restart animation
+        void form.offsetWidth;
+        form.classList.add("shake");
+      }
+      function showOk(msg){
+        statusEl.textContent = msg;
+        statusEl.className = "status ok";
+      }
+
+      // Accessibility: allow only digits in sum
+      sumEl.addEventListener("input", () => {
+        sumEl.value = sumEl.value.replace(/\D+/g, "");
+      });
+
+      // Toggle password visibility
+      togglePassBtn.addEventListener("click", () => {
+        const isPwd = passwordEl.type === "password";
+        passwordEl.type = isPwd ? "text" : "password";
+        togglePassBtn.textContent = isPwd ? "Hide" : "Show";
+        togglePassBtn.setAttribute("aria-pressed", String(isPwd));
+        togglePassBtn.setAttribute("aria-label", isPwd ? "Hide password" : "Show password");
+        passwordEl.focus();
+      });
+
+      // Regenerate numbers
+      regenBtn.addEventListener("click", () => generateNumbers());
+
+      // On submit: validate all three conditions
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+
+        const userOk = usernameEl.value === EXPECTED_USERNAME;
+        const passOk = passwordEl.value === EXPECTED_PASSWORD;
+        const sumOk = Number(sumEl.value) === TOTAL;
+
+        if(!passOk){
+          submitBtn.disabled = false;
+          showError("Incorrect password.");
+          passwordEl.focus();
+          return;
+        }
+        if(!sumOk){
+          submitBtn.disabled = false;
+          showError("Security check failed. Please re-check your addition.");
+          sumEl.focus();
+          return;
+        }
+        if(!userOk){
+          // This shouldn't happen because it's read-only, but we keep the check.
+          submitBtn.disabled = false;
+          showError("Username mismatch.");
+          return;
+        }
+
+        showOk("Access granted. Redirecting…");
+        // tiny delay for UI feedback
+        sessionStorage.setItem("loggedIn", "true");
+        setTimeout(() => {
+          // IMPORTANT: update DESTINATION above to your file.
+          window.location.href = DESTINATION;
+        }, 400);
+      });
+
+      // Init
+      generateNumbers();
+
+      // Keyboard niceties
+      passwordEl.addEventListener("keydown", (e) => {
+        if(e.key === "Enter"){ sumEl.focus(); }
+      });
+
+    })();
+  </script>
+</body>
+</html>

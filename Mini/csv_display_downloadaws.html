@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="ensure.js"></script>
+  <title>CSV Data Summary</title>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --fg: #0b3d5c;
+      --muted: #6b7280;
+      --accent: #10b981;
+    }
+    body { font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#fff; padding:28px; color:#111; }
+    h1 { margin: 0 0 8px; font-size: 28px; color: var(--fg); }
+    p.sub { margin: 0 0 24px; color: var(--muted); }
+    .card {
+      border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+      background: #fafafa;
+    }
+    .stat { font-size: 18px; margin: 6px 0; }
+    .value { font-weight: 700; color: var(--fg); }
+    .ok { color: var(--accent); font-weight: 600; }
+    .err { color: #b91c1c; font-weight: 600; }
+    .links { margin-top: 22px; display: flex; gap: 16px; flex-wrap: wrap; }
+    a.btn {
+      display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+      padding:10px 14px; border-radius:10px; border:1px solid #e5e7eb;
+      transition: transform .06s ease, box-shadow .06s ease;
+      color:#0f172a; background:#fff;
+    }
+    a.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.06); }
+    .dim { color: var(--muted); font-size: 14px; margin-top: 10px; }
+    code.badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background:#eef2ff; border:1px solid #e0e7ff; color:#3730a3;
+      padding:2px 6px; border-radius:8px; font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📄 Logged Sensor Data</h1>
+  <p class="sub">Quick overview of your CSV log without loading the full table.</p>
+
+  <div class="card" id="summary">
+    <div class="stat">Status: <span class="value" id="status">Loading…</span></div>
+    <div class="stat">Data range: <span class="value" id="range">—</span></div>
+    <div class="stat">Records: <span class="value" id="count">—</span></div>
+    <div class="dim" id="updated">Updated just now</div>
+  </div>
+
+  <div class="links">
+    <a class="btn" href="indexaws.html">🔙 Back to Live Page</a>
+    <a class="btn" href="http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/download-csv" download>📥 Download Full CSV Log</a>
+  </div>
+
+  <script>
+    // ---- CONFIG ----
+    const BASE = "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000";
+    const RANGE_ENDPOINT = `${BASE}/csv-range`; // Optional: if you add a tiny endpoint returning {first, last, count}
+    const JSON_ENDPOINT  = `${BASE}/csv-json`;  // Existing: returns {headers:[], rows:[[]]}
+
+    const els = {
+      status: document.getElementById("status"),
+      range:  document.getElementById("range"),
+      count:  document.getElementById("count"),
+      updated:document.getElementById("updated"),
+    };
+
+    // Try a fast, lightweight range endpoint first.
+    (async function init() {
+      try {
+        const fast = await tryFastRange();
+        if (fast) { renderOK(fast.first, fast.last, fast.count, "Fast"); return; }
+      } catch (_) { /* fall through to full */ }
+
+      // Fallback: use existing /csv-json and compute range client-side.
+      try {
+        const computed = await computeRangeFromJson();
+        renderOK(computed.first, computed.last, computed.count, "Computed");
+      } catch (err) {
+        renderError(err);
+      }
+    })();
+
+    async function tryFastRange() {
+      // If the endpoint doesn't exist, this will 404 and we return null (fallback)
+      const res = await fetch(RANGE_ENDPOINT, { method: "GET" });
+      if (!res.ok) return null;
+      const { first, last, count } = await res.json();
+      if (!first || !last) return null;
+      return { first, last, count: Number(count ?? 0) };
+    }
+
+    async function computeRangeFromJson() {
+      const res = await fetch(JSON_ENDPOINT);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (!data?.headers || !data?.rows) throw new Error("Malformed /csv-json");
+
+      // Try to find the timestamp column by common names
+      const headers = data.headers.map(h => String(h).toLowerCase());
+      const dateIdx =
+        headers.indexOf("datetime") >= 0 ? headers.indexOf("datetime") :
+        headers.indexOf("timestamp") >= 0 ? headers.indexOf("timestamp") :
+        headers.indexOf("time") >= 0 ? headers.indexOf("time") :
+        0; // fallback to first column
+
+      // Extract valid dates
+      const times = [];
+      for (const row of data.rows) {
+        const raw = row[dateIdx];
+        const t = parseAsDate(raw);
+        if (!isNaN(t)) times.push(t);
+      }
+
+      if (times.length === 0) throw new Error("No valid timestamps found");
+
+      const min = new Date(Math.min(...times));
+      const max = new Date(Math.max(...times));
+
+      return {
+        first: formatHuman(min),
+        last:  formatHuman(max),
+        count: data.rows.length
+      };
+    }
+
+    function renderOK(first, last, count, mode) {
+      els.status.textContent = `OK (${mode})`;
+      els.status.className = "ok";
+      els.range.textContent  = `${first} → ${last}`;
+      els.count.textContent  = String(count);
+      els.updated.innerHTML  = `Source: <code class="badge">${mode === "Fast" ? "/csv-range" : "/csv-json"}</code>`;
+    }
+
+    function renderError(err) {
+      els.status.textContent = "Error";
+      els.status.className = "err";
+      els.range.textContent  = "Unavailable";
+      els.count.textContent  = "—";
+      els.updated.textContent = `Error: ${err.message ?? err}`;
+    }
+
+    // --- Helpers ---
+    function parseAsDate(val) {
+      // Support ISO, "YYYY-MM-DD HH:MM:SS", or epoch (ms/s)
+      if (val == null) return NaN;
+      const s = String(val).trim();
+
+      // epoch seconds
+      if (/^\d{10}$/.test(s)) return Number(s) * 1000;
+      // epoch ms
+      if (/^\d{13}$/.test(s)) return Number(s);
+
+      // Replace space with 'T' if needed for Date parsing
+      const norm = s.includes(" ") && !s.includes("T") ? s.replace(" ", "T") : s;
+      const t = Date.parse(norm);
+      return isNaN(t) ? NaN : t;
+    }
+
+    function formatHuman(d) {
+      // e.g., 2025-10-03 14:07:22
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+  </script>
+</body>
+</html>

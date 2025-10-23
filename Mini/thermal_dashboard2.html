@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thermal Dashboard (Temp + Graph + Link)</title>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin:0; height:100%; width:100%; background:#fff; font-family:Arial, sans-serif; }
+    #layout { display:flex; height:100vh; width:100vw; }
+
+    /* Left panel */
+    .left  { flex:1; display:flex; flex-direction:column; gap:16px; padding:16px; background:#fff; box-sizing:border-box; }
+    .card  { background:#fff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 6px 16px rgba(0,0,0,0.08); padding:16px; }
+    .row   { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+    /* Current temp styling: smaller as requested */
+    #tempVal  { font-size:2.2rem; font-weight:700; color:#333; }
+    #tempNote { font-size:0.95rem; color:#777; }
+
+    /* Button */
+    .btn {
+      display:inline-block;
+      padding:10px 14px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      background:#f7f7f7;
+      color:#333;
+      text-decoration:none;
+      font-weight:600;
+      transition:transform 0.05s ease, box-shadow 0.1s ease;
+    }
+    .btn:hover { box-shadow:0 3px 10px rgba(0,0,0,0.12); }
+    .btn:active { transform:scale(0.98); }
+
+    /* Chart area */
+    .chart-wrap { position:relative; height:calc(100% - 170px); min-height:200px; }
+    canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
+
+    /* Right panel */
+    .right { flex:1; display:flex; align-items:center; justify-content:center; background:#000; }
+    #thermalImage { width:100%; height:100%; object-fit:cover; display:block; }
+  </style>
+  <!-- Chart.js for the live graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="layout">
+    <!-- LEFT: button + current temp + live graph -->
+    <section class="left">
+      <div class="card">
+        <div class="row">
+          <div>
+            <div id="tempVal">-- °C</div>
+            <div id="tempNote">waiting…</div>
+          </div>
+          <!-- 🔧 TODO: change the href below to your HTML filename, e.g. './thresholdsetup.html' -->
+          <a class="btn" id="openLink" href="./index.html" target="">🔙 Back to Live Page</a>
+          <a class="btn" id="openLink" href="./thermal_camera.html" target="">Full View</a>
+
+
+        </div>
+      </div>
+
+      <div class="card chart-wrap">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </section>
+
+    <!-- RIGHT: your working stream viewer (unchanged logic) -->
+    <section class="right">
+      <img id="thermalImage" src="" alt="Thermal Stream">
+    </section>
+  </div>
+
+  <script>
+    // ====== CONFIG (your Pi) ======
+    const SERVER = "http://10.196.133.61:5090";
+    const THERMAL_URL = SERVER + "/thermal";
+    const TEMP_URL    = SERVER + "/current_temp"; // using current frame average
+
+    // ====== RIGHT SIDE: keep your 1s refresh exactly as you had ======
+    const img = document.getElementById('thermalImage');
+    function refreshThermal() {
+      img.src = THERMAL_URL + "?" + Date.now(); // cache-bust
+    }
+    refreshThermal();
+    setInterval(refreshThermal, 1000);
+
+    // ====== LEFT SIDE: number + live chart ======
+    const tempVal  = document.getElementById('tempVal');
+    const tempNote = document.getElementById('tempNote');
+
+    // Chart setup
+    const ctx = document.getElementById('tempChart').getContext('2d');
+    const maxPoints = 300; // keep last ~10 minutes if polling every 2s
+    const tempChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Current Temp (°C)',
+          data: [],
+          borderColor: '#ff6600',
+          backgroundColor: 'rgba(255,165,0,0.2)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Time' }, ticks: { maxTicksLimit: 8 } },
+          y: { title: { display: true, text: 'Temperature (°C)' }, beginAtZero: false }
+        },
+        plugins: { legend: { display: true, position: 'top' } }
+      }
+    });
+
+    async function pollTemperature() {
+      try {
+        const res = await fetch(TEMP_URL + "?ts=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        const data = await res.json();
+
+        // Update number
+        if (typeof data.avg === "number") {
+          tempVal.textContent = data.avg.toFixed(1) + " °C";
+          tempNote.textContent = "updated " + (data.time || "");
+        } else if (data.status === "no_frame") {
+          tempVal.textContent = "-- °C";
+          tempNote.textContent = "waiting for first frame…";
+        } else {
+          tempVal.textContent = "-- °C";
+          tempNote.textContent = "no data";
+        }
+
+        // Update chart (only when we have a valid number)
+        if (typeof data.avg === "number") {
+          const label = data.time || new Date().toLocaleTimeString();
+          tempChart.data.labels.push(label);
+          tempChart.data.datasets[0].data.push(Number(data.avg));
+          if (tempChart.data.labels.length > maxPoints) {
+            tempChart.data.labels.shift();
+            tempChart.data.datasets[0].data.shift();
+          }
+          tempChart.update('none');
+        }
+      } catch (e) {
+        console.error("current_temp fetch failed:", e);
+        tempNote.textContent = "fetch error";
+      }
+    }
+
+    // Live poll every 2 seconds (smooth chart + low load)
+    pollTemperature();
+    setInterval(pollTemperature, 60000); //2000 for 2 seconds and 60000 for 60 seconds
+
+    // ====== OPTIONAL: If you want to set the button dynamically in JS, do it here ======
+    // document.getElementById('openLink').href = './your_file.html';
+  </script>
+</body>
+</html>

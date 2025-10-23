@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humidity Monitoring Only</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #humidityReport1, #humidityReport2 { margin-top: 20px; color: green; font-weight: bold; }
+        #normalMessage { margin-top: 20px; color: blue; font-weight: normal; }
+    </style>
+    <script src="ensure.js"></script>
+</head>
+<body>
+    <h1>SmartComfort – Humidity Monitoring</h1>
+
+    <!-- First Range and Threshold for Humidity -->
+    <div class="container">
+        <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="80"></label>
+        <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="120"></label>
+        <label>Threshold 1 (%): <input type="number" id="thresholdHumidity1" value="5"></label>
+    </div>
+
+    <!-- Second Range and Threshold for Humidity -->
+    <div class="container">
+        <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="100"></label>
+        <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="120"></label>
+        <label>Threshold 2 (%): <input type="number" id="thresholdHumidity2" value="10"></label>
+    </div>
+
+    <button onclick="startHumidityMonitoring()">Start Monitoring</button>
+
+    <!-- Output -->
+    <div id="humidityReport1"></div>
+    <div id="humidityReport2"></div>
+    <div id="normalMessage">No changes detected yet...</div>
+
+    <script>
+        let previousAvgHumidity1 = null;
+        let previousAvgHumidity2 = null;
+
+        const dataPointsHumidity1 = [];
+        const dataPointsHumidity2 = [];
+
+        async function fetchData() {
+            try {
+                const response = await fetch('http://10.196.133.61:5000/sensor-data');
+                const data = await response.json();
+                return { humidity: parseFloat(data.humidity) };
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        async function monitorHumidity() {
+            const data = await fetchData();
+            if (data === null) return;
+
+            const { humidity } = data;
+
+            dataPointsHumidity1.push(humidity);
+            if (dataPointsHumidity1.length === 3) {
+                const currentAvg1 = calculateAverage(dataPointsHumidity1);
+                if (previousAvgHumidity1 !== null) {
+                    const diff1 = Math.abs(currentAvg1 - previousAvgHumidity1);
+                    const low1 = parseFloat(document.getElementById('lowerHumidity1').value);
+                    const high1 = parseFloat(document.getElementById('higherHumidity1').value);
+                    const thresh1 = parseFloat(document.getElementById('thresholdHumidity1').value);
+
+                    if ((currentAvg1 < low1 || currentAvg1 > high1) || diff1 >= thresh1) {
+                        document.getElementById('humidityReport1').innerText =
+                            `Alert for Range 1 (Humidity): Avg = ${currentAvg1.toFixed(2)} %, change = ${diff1.toFixed(2)} %, Prev = ${previousAvgHumidity1.toFixed(2)}`;
+                    }
+                }
+                previousAvgHumidity1 = currentAvg1;
+                dataPointsHumidity1.length = 0;
+            }
+
+            dataPointsHumidity2.push(humidity);
+            if (dataPointsHumidity2.length === 3) {
+                const currentAvg2 = calculateAverage(dataPointsHumidity2);
+                if (previousAvgHumidity2 !== null) {
+                    const diff2 = Math.abs(currentAvg2 - previousAvgHumidity2);
+                    const low2 = parseFloat(document.getElementById('lowerHumidity2').value);
+                    const high2 = parseFloat(document.getElementById('higherHumidity2').value);
+                    const thresh2 = parseFloat(document.getElementById('thresholdHumidity2').value);
+
+                    if ((currentAvg2 < low2 || currentAvg2 > high2) || diff2 >= thresh2) {
+                        document.getElementById('humidityReport2').innerText =
+                            `Alert for Range 2 (Humidity): Avg = ${currentAvg2.toFixed(2)} %, change = ${diff2.toFixed(2)} %, Prev = ${previousAvgHumidity2.toFixed(2)}`;
+                    }
+                }
+                previousAvgHumidity2 = currentAvg2;
+                dataPointsHumidity2.length = 0;
+            }
+        }
+
+        function startHumidityMonitoring() {
+            document.getElementById('humidityReport1').innerText = '';
+            document.getElementById('humidityReport2').innerText = '';
+            document.getElementById('normalMessage').innerText = 'Monitoring started...';
+            setInterval(monitorHumidity, 60000); // every 60 seconds
+        }
+    </script>
+</body>
+</html>

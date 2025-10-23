@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold Setup with Range</title>
+    <style>
+        body { font-family: Arial; background-color: #f2f2f2; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        #report1, #report2, #humidityReport1, #humidityReport2, #lightReport1, #lightReport2 { margin-top: 20px; color: green; font-weight: bold; }
+        #normalMessage { margin-top: 20px; color: blue; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <h1>🛋️ SmartComfort</h1>
+
+    <!-- First Range and Threshold (Existing) for Temperature -->
+     <h2>🌡️ Temperature</h2>
+    <div class="container">
+        <label>Lower Temperature 1 (°C): <input type="number" id="lowerRange1" value="18"></label>
+        <label>Higher Temperature 1 (°C): <input type="number" id="higherRange1" value="22"></label>
+        <label>Threshold 1 (°C): <input type="number" id="threshold1" value="0.05"></label>
+        <button id="monitorButton" onclick="startMonitoring()">🖥️Start Monitoring</button>
+    </div>
+
+    <!-- Second Range and Threshold (New) for Temperature -->
+    <div class="container">
+        <label>Lower Temperature 2 (°C): <input type="number" id="lowerRange2" value="20"></label>
+        <label>Higher Temperature 2 (°C): <input type="number" id="higherRange2" value="24"></label>
+        <label>Threshold 2 (°C): <input type="number" id="threshold2" value="0.5"></label>
+    </div>
+
+    <h2>💧 Humidity</h2>
+    <!-- First Range and Threshold for Humidity -->
+    <div class="container">
+        <label>Lower Humidity 1 (%): <input type="number" id="lowerHumidity1" value="20"></label>
+        <label>Higher Humidity 1 (%): <input type="number" id="higherHumidity1" value="40"></label>
+        <label>Threshold 1 (%): <input type="number" id="thresholdHumidity1" value="5"></label>
+    </div>
+
+    <!-- Second Range and Threshold for Humidity -->
+    <div class="container">
+        <label>Lower Humidity 2 (%): <input type="number" id="lowerHumidity2" value="45"></label>
+        <label>Higher Humidity 2 (%): <input type="number" id="higherHumidity2" value="75"></label>
+        <label>Threshold 2 (%): <input type="number" id="thresholdHumidity2" value="10"></label>
+    </div>
+
+    <h2>💡 Light</h2>
+    <!-- First Range and Threshold for Ambient Light -->
+    <div class="container">
+        <label>Lower Light 1 (%): <input type="number" id="lowerLight1" value="10"></label>
+        <label>Higher Light 1 (%): <input type="number" id="higherLight1" value="40"></label>
+        <label>Threshold 1 (%): <input type="number" id="thresholdLight1" value="2"></label>
+    </div>
+
+    <!-- Second Range and Threshold for Ambient Light -->
+    <div class="container">
+        <label>Lower Light 2 (%): <input type="number" id="lowerLight2" value="40"></label>
+        <label>Higher Light 2 (%): <input type="number" id="higherLight2" value="80"></label>
+        <label>Threshold 2 (%): <input type="number" id="thresholdLight2" value="3"></label>
+    </div>
+
+    <!-- Separate Outputs for both Range 1 and Range 2 -->
+    <div id="report1"></div> <!-- Output for Range 1 (Temperature) -->
+    <div id="report2"></div> <!-- Output for Range 2 (Temperature) -->
+
+    <div id="humidityReport1"></div> <!-- Output for Range 1 (Humidity) -->
+    <div id="humidityReport2"></div> <!-- Output for Range 2 (Humidity) -->
+
+    <div id="lightReport1"></div> <!-- Output for Range 1 (Ambient Light) -->
+    <div id="lightReport2"></div> <!-- Output for Range 2 (Ambient Light) -->
+
+    <div id="normalMessage">No changes detected yet...</div> <!-- Normal Message Section -->
+
+    <script>
+        let previousAvg1 = null;
+        let previousAvg2 = null;
+        let previousAvgHumidity1 = null;
+        let previousAvgHumidity2 = null;
+        let previousAvgLight1 = null;
+        let previousAvgLight2 = null;
+
+        const dataPoints1 = [];
+        const dataPoints2 = [];
+        const dataPointsHumidity1 = [];
+        const dataPointsHumidity2 = [];
+        const dataPointsLight1 = [];
+        const dataPointsLight2 = [];
+
+        async function fetchData() {
+            try {
+                console.log("Fetching data...");
+                const response = await fetch('http://10.196.133.61:5000/sensor-data');
+                const data = await response.json();
+                return {
+                    temperature: parseFloat(data.temperature),
+                    humidity: parseFloat(data.humidity),
+                    lux: parseFloat(data.lux)
+                };
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        function calculateAverage(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        async function monitor() {
+            const data = await fetchData();
+            if (data === null) return;
+
+            const { temperature, humidity, lux } = data;
+
+            dataPoints1.push(temperature);
+            if (dataPoints1.length === 3) {
+                const currentAvg1 = calculateAverage(dataPoints1);
+                if (previousAvg1 !== null) {
+                    const difference1 = Math.abs(currentAvg1 - previousAvg1);
+                    const lower1 = parseFloat(document.getElementById('lowerRange1').value);
+                    const higher1 = parseFloat(document.getElementById('higherRange1').value);
+                    const threshold1 = parseFloat(document.getElementById('threshold1').value);
+
+                    if ((currentAvg1 < lower1 || currentAvg1 > higher1) || difference1 >= threshold1) {
+                        document.getElementById('report1').innerText = `Alert for Range 1 (Temp): Avg Temp is ${currentAvg1.toFixed(2)} °C, changed by ${difference1.toFixed(2)} °C`;
+                    }
+                }
+                previousAvg1 = currentAvg1;
+                dataPoints1.length = 0;
+            }
+
+            dataPoints2.push(temperature);
+            if (dataPoints2.length === 3) {
+                const currentAvg2 = calculateAverage(dataPoints2);
+                if (previousAvg2 !== null) {
+                    const difference2 = Math.abs(currentAvg2 - previousAvg2);
+                    const lower2 = parseFloat(document.getElementById('lowerRange2').value);
+                    const higher2 = parseFloat(document.getElementById('higherRange2').value);
+                    const threshold2 = parseFloat(document.getElementById('threshold2').value);
+
+                    if ((currentAvg2 < lower2 || currentAvg2 > higher2) || difference2 >= threshold2) {
+                        document.getElementById('report2').innerText = `Alert for Range 2 (Temp): Avg Temp is ${currentAvg2.toFixed(2)} °C, changed by ${difference2.toFixed(2)} °C`;
+                    }
+                }
+                previousAvg2 = currentAvg2;
+                dataPoints2.length = 0;
+            }
+
+            dataPointsHumidity1.push(humidity);
+            if (dataPointsHumidity1.length === 3) {
+                const currentAvgHumidity1 = calculateAverage(dataPointsHumidity1);
+                if (previousAvgHumidity1 !== null) {
+                    const differenceHumidity1 = Math.abs(currentAvgHumidity1 - previousAvgHumidity1);
+                    const lowerHumidity1 = parseFloat(document.getElementById('lowerHumidity1').value);
+                    const higherHumidity1 = parseFloat(document.getElementById('higherHumidity1').value);
+                    const thresholdHumidity1 = parseFloat(document.getElementById('thresholdHumidity1').value);
+
+                    if ((currentAvgHumidity1 < lowerHumidity1 || currentAvgHumidity1 > higherHumidity1) || differenceHumidity1 >= thresholdHumidity1) {
+                        document.getElementById('humidityReport1').innerText = `Alert for Range 1 (Humidity): Avg Humidity is ${currentAvgHumidity1.toFixed(2)} %, changed by ${differenceHumidity1.toFixed(2)} %`;
+                    }
+                }
+                previousAvgHumidity1 = currentAvgHumidity1;
+                dataPointsHumidity1.length = 0;
+            }
+
+            dataPointsHumidity2.push(humidity);
+            if (dataPointsHumidity2.length === 3) {
+                const currentAvgHumidity2 = calculateAverage(dataPointsHumidity2);
+                if (previousAvgHumidity2 !== null) {
+                    const differenceHumidity2 = Math.abs(currentAvgHumidity2 - previousAvgHumidity2);
+                    const lowerHumidity2 = parseFloat(document.getElementById('lowerHumidity2').value);
+                    const higherHumidity2 = parseFloat(document.getElementById('higherHumidity2').value);
+                    const thresholdHumidity2 = parseFloat(document.getElementById('thresholdHumidity2').value);
+
+                    if ((currentAvgHumidity2 < lowerHumidity2 || currentAvgHumidity2 > higherHumidity2) || differenceHumidity2 >= thresholdHumidity2) {
+                        document.getElementById('humidityReport2').innerText = `Alert for Range 2 (Humidity): Avg Humidity is ${currentAvgHumidity2.toFixed(2)} %, changed by ${differenceHumidity2.toFixed(2)} %`;
+                    }
+                }
+                previousAvgHumidity2 = currentAvgHumidity2;
+                dataPointsHumidity2.length = 0;
+            }
+
+            dataPointsLight1.push(lux);
+            if (dataPointsLight1.length === 3) {
+                const currentAvgLight1 = calculateAverage(dataPointsLight1);
+                if (previousAvgLight1 !== null) {
+                    const differenceLight1 = Math.abs(currentAvgLight1 - previousAvgLight1);
+                    const lowerLight1 = parseFloat(document.getElementById('lowerLight1').value);
+                    const higherLight1 = parseFloat(document.getElementById('higherLight1').value);
+                    const thresholdLight1 = parseFloat(document.getElementById('thresholdLight1').value);
+
+                    const diff_in_percentage1 = (differenceLight1 / 1140.25) * 100;
+
+                    if ((((currentAvgLight1 / 1140.25) * 100) < lowerLight1 || ((currentAvgLight1 / 1140.25) * 100) > higherLight1) || diff_in_percentage1 >= thresholdLight1) {
+                        document.getElementById('lightReport1').innerText =
+                            `Alert for Range 1 (Light): Avg Light is ${currentAvgLight1.toFixed(2)} lux, in percent ${((currentAvgLight1 / 1140.25) * 100).toFixed(2)}, changed by ${differenceLight1.toFixed(2)} lux, ${diff_in_percentage1.toFixed(2)} %, Prev = ${previousAvgLight1.toFixed(2)}, in percent ${((previousAvgLight1 / 1140.25) * 100).toFixed(2)}`;
+                    }
+                }
+                previousAvgLight1 = currentAvgLight1;
+                dataPointsLight1.length = 0;
+            }
+
+            dataPointsLight2.push(lux);
+            if (dataPointsLight2.length === 3) {
+                const currentAvgLight2 = calculateAverage(dataPointsLight2);
+                if (previousAvgLight2 !== null) {
+                    const differenceLight2 = Math.abs(currentAvgLight2 - previousAvgLight2);
+                    const lowerLight2 = parseFloat(document.getElementById('lowerLight2').value);
+                    const higherLight2 = parseFloat(document.getElementById('higherLight2').value);
+                    const thresholdLight2 = parseFloat(document.getElementById('thresholdLight2').value);
+
+                    const diff_in_percentage2 = (differenceLight2 / 1140.25) * 100;
+
+                    if ((((currentAvgLight2 / 1140.25) * 100) < lowerLight2 || ((currentAvgLight2 / 1140.25) * 100) > higherLight2) || diff_in_percentage2 >= thresholdLight2) {
+                        document.getElementById('lightReport2').innerText =
+                            `Alert for Range 2 (Light): Avg Light is ${currentAvgLight2.toFixed(2)} lux, in percent ${((currentAvgLight2 / 1140.25) * 100).toFixed(2)}, changed by ${differenceLight2.toFixed(2)} lux, ${diff_in_percentage2.toFixed(2)} %, Prev = ${previousAvgLight2.toFixed(2)}, in percent ${((previousAvgLight2 / 1140.25) * 100).toFixed(2)}`;
+                    }
+                }
+                previousAvgLight2 = currentAvgLight2;
+                dataPointsLight2.length = 0;
+            }
+        }
+
+        function startMonitoring() {
+            document.getElementById('report1').innerText = '';
+            document.getElementById('report2').innerText = '';
+            document.getElementById('normalMessage').innerText = 'Monitoring started...';
+            setInterval(monitor, 60000);
+        }
+    </script>
+</body>
+</html>
