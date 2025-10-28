@@ -52,21 +52,22 @@
           Download from Server B
         </a>
       </div>
-      <h5>Option 1 (Recommended)</h5>
+      <h5> Recommended Steps</h5>
       <div class="tips">
         <div><span class="chip">Windows</span> Unzip ➜ double-click <code>App Run</code>. If no Pre Installed Python, it auto-uses PowerShell.</div>
         <div class="launchers">
           <code>Check Desktop</code> <code>Click on SmartComfx Icon to Access</code>
         </div>
-        <div style="margin-top:6px;"><span class="chip">macOS / Linux</span> Unzip ➜ open Terminal ➜ <code>chmod +x start.sh</code> (first time) ➜ <code>./start.sh</code></div>
-      </div><h5>Option 2 (Developers)</h5>
+        <div style="margin-top:6px;"><span class="chip">macOS / Linux</span> Unzip ➜ open Terminal in admin mode ➜ <code>In Terminal, go to cd /Users/{UserName}/Downloads/SmartComfX</code> An example:cd /Users/Soheil/Downloads/SmartComfX  </div>
+        <div style="margin-top:6px;"> <code>perl -pi -e 's/\r$//' start.sh "App Run MacLinux.sh"</code> ➜ <code>chmod +x start.sh "App Run MacLinux.sh"</code> ➜ <code>./start.sh or bash start.sh</code></div>
+      <!-- </div><h5>Option 2 (Developers)</h5>
       <div class="tips">
         <div><span class="chip">Windows</span> Unzip ➜ double-click <code>StartSite.bat</code>. If no Python, it auto-uses PowerShell.</div>
         <div class="launchers">
           <code>StartSite.bat</code> <code>Start-StaticServer.ps1</code>
         </div>
         <div style="margin-top:6px;"><span class="chip">macOS / Linux</span> Unzip ➜ open Terminal ➜ <code>chmod +x start.sh</code> (first time) ➜ <code>./start.sh</code></div>
-      </div>
+      </div> -->
 
       <p class="note">Opens <strong>http://127.0.0.1:9150/index.html</strong> automatically. Close the terminal to stop.</p>
       <div class="footer">If one link is slow, try the other. Keep the ZIP near your Desktop for easy access.</div>
