@@ -1,7 +1,7 @@
 const endpoints = [
   "http://10.196.133.61:5000/sensor-data",
   "http://192.168.1.50:5000/sensor-data",
-  "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/sensor-data"
+  "http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/sensor-data"
 ];
 
 // Try each endpoint until one responds OK
@@ -25,7 +25,7 @@ async function main() {
   console.log("✅ Active endpoint:", check);
 
   // ✅ If the working endpoint is your AWS link
-  if (check === "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/sensor-data") {
+  if (check === "http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/sensor-data") {
     // 👉 Replace 'yourpage.html' below with your target HTML page
     window.location.href = "indexaws.html";
   }

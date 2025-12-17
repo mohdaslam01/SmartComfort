@@ -3,15 +3,15 @@
   "rewrites": [
     {
       "source": "/api9990/:path*",
-      "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:9990/:path*"
+      "destination": "http://ec2-3-230-143-202.compute-1.amazonaws.com:9990/:path*"
     },
     {
       "source": "/api7000/:path*",
-      "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/:path*"
+      "destination": "http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/:path*"
     },
     {
       "source": "/api5000/:path*",
-      "destination": "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:5000/:path*"
+      "destination": "http://ec2-3-230-143-202.compute-1.amazonaws.com:5000/:path*"
     }
   ]
 }

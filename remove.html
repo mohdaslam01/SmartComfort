@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test current_temp</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 14px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+    input { width: 520px; max-width: 100%; padding: 10px; font-size: 14px; }
+    button { padding: 10px 14px; font-size: 14px; cursor: pointer; }
+    .card { border:1px solid #e5e7eb; border-radius:10px; padding:12px; margin:10px 0; }
+    pre { white-space: pre-wrap; word-break: break-word; margin:0; }
+    .big { font-size: 22px; font-weight: 800; }
+    .muted { color:#666; }
+  </style>
+</head>
+<body>
+  <h2>✅ current_temp Tester</h2>
+
+  <div class="row">
+    <input id="url" value="http://ec2-3-230-143-202.compute-1.amazonaws.com:9990/current_temp" />
+    <button id="btnOnce">Fetch once</button>
+    <button id="btnStart">Start (2s)</button>
+    <button id="btnStop">Stop</button>
+  </div>
+
+  <div class="card">
+    <div class="big">Extracted Temp: <span id="temp">--</span></div>
+    <div class="muted">Status: <span id="status">idle</span></div>
+    <div class="muted">Time: <span id="time">--</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Raw Response (first 2000 chars)</h3>
+    <pre id="raw">(empty)</pre>
+  </div>
+
+  <div class="card">
+    <h3>Parsed JSON</h3>
+    <pre id="json">(empty)</pre>
+  </div>
+
+  <div class="card">
+    <h3>Console hints</h3>
+    <div class="muted">Open DevTools → Console and Network tab while testing.</div>
+  </div>
+
+  <script>
+    const elUrl = document.getElementById("url");
+    const elTemp = document.getElementById("temp");
+    const elStatus = document.getElementById("status");
+    const elTime = document.getElementById("time");
+    const elRaw = document.getElementById("raw");
+    const elJson = document.getElementById("json");
+
+    let timer = null;
+
+    function setStatus(s) { elStatus.textContent = s; }
+
+    async function fetchTemp() {
+      const base = elUrl.value.trim();
+      const url = base + (base.includes("?") ? "&" : "?") + "ts=" + Date.now();
+
+      setStatus("fetching…");
+
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        const text = await res.text();
+
+        elRaw.textContent = text.slice(0, 2000);
+        setStatus("HTTP " + res.status);
+
+        // Try parse JSON
+        let data;
+        try {
+          data = JSON.parse(text);
+          elJson.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          elJson.textContent = "❌ Not JSON. (This is the problem)\n\n" + e;
+          elTemp.textContent = "--";
+          elTime.textContent = "--";
+          return;
+        }
+
+        // Extract temp from any common key:
+        // avg_temp, avg, temperature, temp, current_temp
+        const tempRaw =
+          (data.avg_temp ?? data.avg ?? data.temperature ?? data.temp ?? data.current_temp);
+
+        const tempNum = (typeof tempRaw === "string") ? Number(tempRaw) : tempRaw;
+
+        if (Number.isFinite(tempNum)) {
+          elTemp.textContent = tempNum.toFixed(2) + " °C";
+        } else {
+          elTemp.textContent = "❌ no numeric temp key";
+        }
+
+        elTime.textContent = data.time || data.timestamp || "--";
+
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        setStatus("❌ fetch failed");
+        elRaw.textContent = String(err);
+        elJson.textContent = "(empty)";
+        elTemp.textContent = "--";
+        elTime.textContent = "--";
+      }
+    }
+
+    document.getElementById("btnOnce").onclick = fetchTemp;
+
+    document.getElementById("btnStart").onclick = () => {
+      if (timer) return;
+      fetchTemp();
+      timer = setInterval(fetchTemp, 2000);
+      setStatus("running…");
+    };
+
+    document.getElementById("btnStop").onclick = () => {
+      if (timer) clearInterval(timer);
+      timer = null;
+      setStatus("stopped");
+    };
+  </script>
+</body>
+</html>

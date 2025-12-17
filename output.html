@@ -1,4 +1,1024 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Occupant-Centric Comfort Measurement & Research Program</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="A globally relevant research overview on occupant-centric comfort, AI-driven intelligent environments, and inclusive education."
+  />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-light: #f5f7fb;
+      --bg-card: #ffffff;
+      --primary: #2c6bed;
+      --primary-soft: rgba(44, 107, 237, 0.07);
+      --accent: #02b39b;
+      --text-main: #1f2933;
+      --text-muted: #6b7280;
+      --border-soft: #e2e8f0;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+      --max-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top left, #e0edff 0, #f5f7fb 38%, #fdfdfd 100%);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 18px 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.4fr);
+      gap: 32px;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hero-text {
+      padding: 8px 4px;
+    }
+
+    .chip-row {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #34d399 0, #059669 40%, #047857 100%);
+    }
+
+    h1 {
+      font-size: clamp(2rem, 2.7vw, 2.6rem);
+      line-height: 1.2;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 0.94rem;
+      color: var(--text-muted);
+      max-width: 580px;
+      margin-bottom: 20px;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .hero-badge {
+      font-size: 0.8rem;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: rgba(255, 255, 255, 0.92);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .hero-badge strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .hero-quote {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-left: 3px solid var(--primary);
+      padding-left: 12px;
+      margin-bottom: 6px;
+    }
+
+    .hero-quote span {
+      font-style: italic;
+    }
+
+    .hero-quote-footnote {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .hero-visual {
+      background: linear-gradient(145deg, #0f172a, #1e293b);
+      border-radius: var(--radius-xl);
+      padding: 18px 18px 22px;
+      box-shadow: var(--shadow-soft);
+      color: #e5e7eb;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-visual::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.28) 0, transparent 55%),
+                  radial-gradient(circle at 100% 100%, rgba(45, 212, 191, 0.16) 0, transparent 50%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .hero-visual-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .pill {
+      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      margin-bottom: 16px;
+    }
+
+    .pill-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #facc15 0, #f97316 45%, #ea580c 100%);
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.9);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.76);
+      border-radius: 18px;
+      padding: 14px 15px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      backdrop-filter: blur(12px);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      color: #cbd5f5;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title span {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .chip-small {
+      font-size: 0.72rem;
+      color: #9ca3af;
+      border-radius: var(--radius-pill);
+      padding: 3px 9px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .chip-small strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .pill-mini {
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #cbd5f5;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .hero-metric-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .hero-metric {
+      flex: 1 1 90px;
+      min-width: 0;
+    }
+
+    .hero-metric-label {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    .hero-metric-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    .hero-metric-sub {
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+
+    .section {
+      margin-top: 36px;
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 24px 22px 22px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-pill {
+      font-size: 0.7rem;
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-soft);
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    .section-subtitle {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.6fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 840px) {
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul {
+      list-style: none;
+      margin-left: 0;
+      padding-left: 0;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .bullet-list li::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 0.73em;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2c6bed, #02b39b);
+      transform: translateY(-50%);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 0.76rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: #f3f4ff;
+      color: #4338ca;
+    }
+
+    .tag-soft {
+      font-size: 0.76rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .project-card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-soft);
+      padding: 14px 14px 12px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .project-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .project-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .project-meta span {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .project-body {
+      font-size: 0.83rem;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .project-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .project-pill {
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      background: #f9fafb;
+      border: 1px dashed #e5e7eb;
+    }
+
+    .hl-row {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 840px) {
+      .hl-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .highlight-list li {
+      font-size: 0.86rem;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: #f9fafb;
+      border: 1px solid #edf2f7;
+    }
+
+    .highlight-list strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .quote-block {
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(44, 107, 237, 0.06), rgba(2, 179, 155, 0.03));
+      font-size: 0.86rem;
+      color: var(--text-main);
+      position: relative;
+    }
+
+    .quote-block::before {
+      content: "“";
+      position: absolute;
+      top: 4px;
+      left: 10px;
+      font-size: 2rem;
+      color: rgba(148, 163, 184, 0.45);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .quote-block-inner {
+      padding-left: 20px;
+    }
+
+    .quote-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    footer {
+      max-width: var(--max-width);
+      margin: 0 auto 40px;
+      padding: 0 18px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-text">
+        <div class="chip-row">
+          <div class="chip">
+            <span class="chip-dot"></span>
+            Occupant-Centric Comfort · Global Research Overview
+          </div>
+        </div>
+
+        <h1>Live Server, more details for a More Intelligent, Inclusive World</h1>
+
+        <p class="hero-subtitle">
+          This research program explores how multi-sensor systems, artificial intelligence, and human-in-the-loop
+          design can create indoor environments that <strong>learn from people</strong>, respect their diversity, and
+          use energy wisely.
+        </p>
+
+        <div class="hero-badges">
+          <div class="hero-badge"><strong>$190,000+</strong> in competitive research funding</div>
+          <div class="hero-badge"><strong>NSF I-Corps &amp; Seed Grants</strong> for AI and wearable comfort</div>
+          <div class="hero-badge"><strong>Global relevance</strong> in homes, offices &amp; public spaces</div>
+        </div>
+
+        <div class="hero-quote">
+          <span>“The goal is not just smart buildings, but kind buildings — spaces that understand and support the
+          people inside them.”</span>
+          <div class="hero-quote-footnote">– Research Overview</div>
+        </div>
+      </div>
+
+      <!-- Hero Visual -->
+      <div class="hero-visual">
+        <div class="hero-visual-inner">
+          <div class="pill">
+            <span class="pill-dot"></span>
+            Human–AI collaboration for indoor comfort
+          </div>
+
+          <div class="hero-grid">
+            <div class="card">
+              <div class="card-title">
+                <span></span> Occupant-Centric Comfort Framework
+              </div>
+              <p style="font-size:0.78rem; color:#e5e7eb; margin-bottom:6px;">
+                Moving from fixed “ideal temperatures” to a <strong>living model of comfort</strong> that adapts in
+                real time.
+              </p>
+              <div class="chip-small">
+                Inputs
+                <span>•</span>
+                <strong>Environment</strong>, <strong>Wearables</strong>, <strong>Feedback</strong>
+              </div>
+              <div class="pill-row">
+                <div class="pill-mini">Online modeling</div>
+                <div class="pill-mini">Neutral comfort zone</div>
+                <div class="pill-mini">Human-in-the-loop</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span></span> Global Research Portfolio
+              </div>
+              <p style="font-size:0.78rem; color:#e5e7eb; margin-bottom:4px;">
+                Projects span AI-enhanced digital twins, wearable sensing, smart buildings, and inclusive education.
+              </p>
+              <div class="hero-metric-row">
+                <div class="hero-metric">
+                  <div class="hero-metric-label">Focus</div>
+                  <div class="hero-metric-value">Comfort &amp; Sustainability</div>
+                  <div class="hero-metric-sub">Human-centered, energy-aware design</div>
+                </div>
+              </div>
+              <div class="tag-row" style="margin-top:8px;">
+                <span class="tag-soft">AI for Good</span>
+                <span class="tag-soft">Inclusive Design</span>
+                <span class="tag-soft">Built Environments</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. FRAMEWORK -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            1. From Static Set-Points to Living Comfort Models
+          </div>
+          <p class="section-subtitle">
+            Traditional standards assume “average” people in ideal conditions. The occupant-centric framework instead
+            treats comfort as a <strong>dynamic, personal, and learnable</strong> experience.
+          </p>
+        </div>
+        <div class="section-pill">Framework Overview</div>
+      </div>
+
+      <div class="two-column">
+        <div>
+          <p>
+            In the legacy model, comfort is calculated from periodic measurements of temperature and humidity,
+            combined with population-based norms. A single “comfort range” is then applied to everyone in a room,
+            a building, or even a region.
+          </p>
+          <p>
+            In reality, comfort depends on <strong>clothing, activity level, health, culture, age</strong>, and
+            many subtle factors. This mismatch forces people in every country to manually adjust thermostats, fans,
+            windows, and blinds — wasting energy and creating frustration.
+          </p>
+          <p>
+            The new framework upgrades this approach by making comfort:
+          </p>
+          <ul class="bullet-list">
+            <li><strong>Personalized</strong> – responsive to each occupant, not an average.</li>
+            <li><strong>Continuous</strong> – updated online, not fixed in a table.</li>
+            <li><strong>Collaborative</strong> – decisions shared between humans and intelligent systems.</li>
+          </ul>
+        </div>
+
+        <div>
+          <p><strong>Key building blocks of the occupant-centric framework:</strong></p>
+          <ul class="bullet-list">
+            <li>
+              <strong>Multi-sensor fusion</strong> combines ambient measurements
+              (temperature, humidity, CO₂, light, air speed) with <em>wearable data</em>
+              (skin temperature, heart rate) and <em>behavioral cues</em> (movement, occupancy).
+            </li>
+            <li>
+              <strong>Active feedback</strong> – people report “too warm / too cool / just right” via phones,
+              wearables, or simple interfaces.
+            </li>
+            <li>
+              <strong>Online modeling</strong> – AI algorithms continuously learn each person’s neutral
+              comfort zone and update it as conditions change.
+            </li>
+            <li>
+              <strong>Human-in-the-loop control</strong> – the system acts, but occupants remain in control
+              and can override or guide its decisions.
+            </li>
+          </ul>
+          <div class="tag-row">
+            <span class="tag">Thermal comfort</span>
+            <span class="tag">Human-centered AI</span>
+            <span class="tag">Adaptive control</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. NEUTRAL COMFORT ZONE & CONTROL -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            2. Neutral Comfort Zone & Adaptive Environmental Control
+          </div>
+          <p class="section-subtitle">
+            Comfort is no longer a single number. It becomes a <strong>zone</strong> that respects human diversity
+            while reducing energy use.
+          </p>
+        </div>
+        <div class="section-pill">Comfort &amp; Control</div>
+      </div>
+
+      <div class="two-column">
+        <div>
+          <p>
+            Using sensor data and occupant feedback, the system estimates a neutral comfort zone — the range where
+            people feel neither too warm nor too cold. This zone can differ between individuals, groups, times of
+            day, and even cultures.
+          </p>
+          <p>
+            Within this zone, temperature, humidity, light, and air movement can float gently instead of being held
+            at a fixed value. This approach:
+          </p>
+          <ul class="bullet-list">
+            <li>Reduces unnecessary HVAC cycling and energy use (potential savings of 20–40%).</li>
+            <li>Prevents over-cooling and over-heating, common in offices and public buildings worldwide.</li>
+            <li>Supports comfort for sensitive groups: children, elders, and those with specific health needs.</li>
+          </ul>
+        </div>
+
+        <div>
+          <p><strong>Intelligent actuation across building systems:</strong></p>
+          <ul class="bullet-list">
+            <li>
+              <strong>HVAC</strong> – adjusts airflow, heating, and cooling based on learned comfort zones
+              instead of rigid set-points.
+            </li>
+            <li>
+              <strong>Lighting</strong> – tunes illuminance and color temperature to match visual comfort and
+              circadian rhythms.
+            </li>
+            <li>
+              <strong>Shading</strong> – manages daylight and solar gain to avoid glare and overheating.
+            </li>
+          </ul>
+          <p>
+            In all cases, the human remains in the loop: occupants see what the system is doing and can respond,
+            building trust and transparency in AI-driven control.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GLOBAL RESEARCH PROGRAM -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">3. Global-Scale Research Program</div>
+          <p class="section-subtitle">
+            The research portfolio connects <strong>artificial intelligence, environmental sensing, digital twins,
+            and inclusive education</strong> to create solutions that can serve communities in any region.
+          </p>
+        </div>
+        <div class="section-pill">Research Highlights</div>
+      </div>
+
+      <div class="card-grid">
+        <!-- NSF I-Corps Hub -->
+        <article class="project-card">
+          <div class="project-tag">NSF Innovation Corps Hubs · 2025–2026</div>
+          <div class="project-title">
+            Translation Potential of a Wearable Device for Personal Comfort
+          </div>
+          <div class="project-meta">
+            Funding: <span>$50,000</span> · Focus: Wearables → Automated building controls
+          </div>
+          <p class="project-body">
+            This project studies how wearable sensors (skin temperature, humidity, motion) can drive <em>automatic
+            adjustments</em> in indoor conditions. It combines prototyping, user studies, and market exploration to
+            move from research idea to real-world solution.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Smart buildings</div>
+            <div class="project-pill">Physiological sensing</div>
+            <div class="project-pill">Comfort analytics</div>
+          </div>
+        </article>
+
+        <!-- GHAIRI -->
+        <article class="project-card">
+          <div class="project-tag">GHAIRI Seed Grant · 2025</div>
+          <div class="project-title">
+            AI-Enhanced Digital Twin for Thermal Simulation &amp; Control
+          </div>
+          <div class="project-meta">
+            Funding: <span>$50,000</span> · Focus: <span>“Learning buildings”</span>
+          </div>
+          <p class="project-body">
+            A digital twin – a virtual copy of an indoor space – is used to simulate temperature, airflow, and
+            occupancy in real time. AI models continuously optimize comfort and energy, moving toward buildings
+            that <strong>learn from experience</strong>.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Digital twins</div>
+            <div class="project-pill">Reinforcement learning</div>
+            <div class="project-pill">Energy efficiency</div>
+          </div>
+        </article>
+
+        <!-- City of Newark -->
+        <!-- <article class="project-card">
+          <div class="project-tag">City of Newark Initiative · 2024–2025</div>
+          <div class="project-title">
+            CAD Training for Women &amp; Minorities in Construction
+          </div>
+          <div class="project-meta">
+            Funding: <span>$79,995</span> · Focus: <span>Inclusive education</span>
+          </div>
+          <p class="project-body">
+            This initiative develops computer-aided design (CAD) training programs tailored for women and
+            underrepresented groups in construction. It connects technical skills, mentorship, and economic
+            opportunity in a rapidly evolving industry.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Equity &amp; inclusion</div>
+            <div class="project-pill">Workforce development</div>
+            <div class="project-pill">Digital design</div>
+          </div>
+        </article> -->
+
+        <!-- NSF I-Corps Propelus -->
+        <!-- <article class="project-card">
+          <div class="project-tag">NSF I-Corps Northeast Propelus · 2024</div>
+          <div class="project-title">SmartComfort: Pilot Framework</div>
+          <div class="project-meta">
+            Focus: Wearable comfort sensing &amp; user modeling
+          </div>
+          <p class="project-body">
+            SmartComfort introduced the idea of combining wearable sensors with data-driven models to predict
+            personal comfort and adjust ventilation or heating in real time. The program clarified user needs and
+            market pathways for future systems.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Pilot validation</div>
+            <div class="project-pill">User studies</div>
+          </div>
+        </article> -->
+
+        <!-- NJIT Seed -->
+        <article class="project-card">
+          <div class="project-tag">NJIT Faculty Seed Grant · 2024–2025</div>
+          <div class="project-title">
+            Occupant-Centric Measuring System for Personalized Micro-Environments
+          </div>
+          <div class="project-meta">
+            Funding: <span>$10,000</span> · Focus: <span>Online modeling</span>
+          </div>
+          <p class="project-body">
+            This work builds micro-environmental models that respond directly to occupant feedback. Environmental
+            sensors and adaptive algorithms work together to produce highly individualized comfort profiles in
+            everyday living and working spaces.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Micro-environments</div>
+            <div class="project-pill">Online learning</div>
+          </div>
+        </article>
+
+        <!-- Dissemination -->
+        <!-- <article class="project-card">
+          <div class="project-tag">Global Dissemination</div>
+          <div class="project-title">
+            Indoor Air 2024 &amp; Northeast I-Corps Hub Annual Meeting
+          </div>
+          <div class="project-meta">
+            Locations: Hawaiʻi · Princeton University
+          </div>
+          <p class="project-body">
+            Presentations on open, data-driven thermal comfort analysis and wearable-based modeling have positioned
+            this work within international conversations on healthy, sustainable, and human-centric design.
+          </p>
+          <div class="project-foot">
+            <div class="project-pill">Open data</div>
+            <div class="project-pill">Global collaboration</div>
+          </div>
+        </article> -->
+      </div>
+    </section>
+
+    <!-- 4. TEAM & TEACHING -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">4. People, Teaching &amp; Inclusive Practice</div>
+          <p class="section-subtitle">
+            Technology is only as strong as the people behind it. The program is built on collaboration, mentorship,
+            and a commitment to diversity.
+          </p>
+        </div>
+        <div class="section-pill">Human Impact</div>
+      </div>
+
+      <div class="hl-row">
+        <div>
+          <p>
+            The research team brings together expertise from computer science, electrical engineering, environmental
+            design, human-computer interaction, and behavioral science. The structure is deliberately collaborative
+            rather than strictly hierarchical, encouraging open exchange of ideas.
+          </p>
+          <ul class="bullet-list">
+            <li>Team members design algorithms, build prototypes, and run human-subject studies.</li>
+            <li>Partnerships with communities, schools, and industry allow real-world testing and feedback.</li>
+            <li>Students work directly on research problems, gaining experience that travels beyond the classroom.</li>
+          </ul>
+          <div class="tag-row">
+            <span class="tag-soft">Mentorship</span>
+            <span class="tag-soft">Co-creation</span>
+            <span class="tag-soft">Global collaboration</span>
+          </div>
+        </div>
+
+        <div>
+          <p><strong>Teaching areas connected to the research:</strong></p>
+          <ul class="bullet-list">
+            <li>Intelligent Systems &amp; Applied Machine Learning.</li>
+            <li>Internet of Things (IoT) &amp; Sensor Integration.</li>
+            <li>Human-Computer Interaction for Built Environments.</li>
+            <li>Sustainable Design and Energy Management.</li>
+            <li>Data Science for Social Impact.</li>
+          </ul>
+          <p>
+            Courses emphasize project-based learning and real data from ongoing studies, helping learners in any
+            country see how abstract ideas translate to everyday life.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. HIGHLIGHTS & FUTURE -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">5. Recent Highlights &amp; Future Directions</div>
+          <p class="section-subtitle">
+            The work continues to grow along two paths: <strong>scientific depth</strong> and
+            <strong>global usefulness</strong>.
+          </p>
+        </div>
+        <div class="section-pill">Looking Ahead</div>
+      </div>
+
+      <div class="hl-row">
+        <div>
+          <ul class="highlight-list">
+            <li>
+              <strong>NSF Innovation Corps Hubs funding (2025–2026)</strong> – advancing wearable comfort
+              technology toward real-world deployment.
+            </li>
+            <li>
+              <strong>GHAIRI Seed Grant</strong> – launching an AI-enhanced digital twin platform for energy-aware,
+              occupant-centric control.
+            </li>
+            <li>
+              <strong>City of Newark partnership</strong> – CAD training programs supporting women and minorities
+              in construction fields.
+            </li>
+            <li>
+              <strong>Indoor Air 2024 &amp; I-Corps meetings</strong> – sharing methods for open, reproducible
+              thermal comfort research.
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="quote-block">
+            <div class="quote-block-inner">
+              <p style="margin-bottom:6px;">
+                Future work will explore predictive comfort analytics, cross-modal integration of thermal, visual,
+                and acoustic comfort, edge computing for low-latency control, and federated learning to protect
+                privacy while training across buildings and regions.
+              </p>
+              <p style="margin-bottom:0;">
+                These efforts aim to support cities, campuses, and homes in every part of the world — from dense
+                urban centers to emerging communities.
+              </p>
+              <div class="quote-label">Vision</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. CLOSING -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">6. Conclusion: Technology in Service of People</div>
+        </div>
+        <div class="section-pill">Global Perspective</div>
+      </div>
+
+      <p>
+        The occupant-centric comfort framework and the broader research program described here share a simple,
+        universal intention: to ensure that technology <strong>serves people with dignity, fairness, and care</strong>.
+      </p>
+      <p>
+        By uniting AI, wearable sensing, digital twins, and inclusive education, this work encourages buildings and
+        infrastructures that are not only more efficient, but also more humane. It is designed to be translated
+        across climates, cultures, and economic conditions — from small homes to large institutions, in every region
+        of the world.
+      </p>
+      <p>
+        The journey continues through curiosity, international collaboration, and a shared belief that comfort,
+        sustainability, and opportunity should be accessible to all.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    &copy; <!-- You can replace this with your lab / institution name -->
+    <span>HIBE Lab</span>. Designed for a global audience.
+  </footer>
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Live Sensor Data</title>
@@ -42,4 +1062,4 @@
         setInterval(fetchData, 3600000); // Refresh every 10 seconds
     </script>
 </body>
-</html>
+</html> -->

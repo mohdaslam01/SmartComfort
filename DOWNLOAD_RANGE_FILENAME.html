@@ -43,6 +43,9 @@
         <input type="text" id="filterBox" placeholder="Filter by filename… (e.g., fenster, sensor_data)"/>
         <button class="btn" id="clearFilterBtn">Clear</button>
         <button class="btn" id="refreshBtn" title="Rescan directory">Refresh</button>
+        <button class="btn" title="Rescan directory" onclick="window.location.href='DOWNLOAD_RANGE_FILENAME_Net.html'"">Distributed Network Data</button>
+        <button class="btn" title="Rescan directory" onclick="window.location.href='DOWNLOAD_RANGE_FILENAME_Results.html'"">Results</button>
+        <button class="btn" title="Rescan directory" onclick="window.location.href='index.html'"">Back to Live Page</button>
         <a class="btn primary" id="dlBtn" href="#" title="Download latest summary CSV">Download Summary CSV</a>
         <span class="right muted" id="status"></span>
       </div>
@@ -72,7 +75,7 @@
 
   <script>
     // EC2 API base (HTTP). If you later add HTTPS/NGINX, change to https://yourdomain.
-    const API_BASE = 'http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:5000';
+    const API_BASE = 'http://ec2-3-230-143-202.compute-1.amazonaws.com:5000';
 
     const metaLine = document.getElementById('metaLine');
     const statusEl = document.getElementById('status');

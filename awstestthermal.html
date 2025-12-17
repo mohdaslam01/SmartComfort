@@ -71,7 +71,6 @@
     }
 
     /* MIDDLE: top card = temp/controls, bottom = chart (fills remaining) */
-    /* .middle-top { } */
     .chart-wrap { flex:1; position:relative; min-height:240px; }
     .chart-wrap canvas { position:absolute; inset:0; width:100% !important; height:100% !important; }
 
@@ -99,8 +98,6 @@
     <section class="col">
       <h2>Thermal Imaging Information</h2>
       <div class="left-wrap">
-        <!-- Replace src if needed -->
-         
         <img id="promoImage" src="thermal.png" alt="Thermal Information" />
       </div>
     </section>
@@ -115,7 +112,6 @@
             <div id="tempNote">waiting…</div>
           </div>
           <div class="row" style="gap:10px;">
-            <!-- Change hrefs as needed -->
             <a class="btn" id="btnBack" href="./indexaws.html">🔙 Back to Live Page</a>
             <a class="btn" id="btnFullView" href="./thermal_cameraaws.html">Full View</a>
           </div>
@@ -137,10 +133,10 @@
   </div>
 
   <script>
-    // ====== CONFIG (your Pi) ======
-    const SERVER     = "http://ec2-3-230-143-202.compute-1.amazonaws.com:9990";
-    const THERMAL_URL= SERVER + "/thermal";
-    const TEMP_URL   = SERVER + "/current_temp"; // returns { avg, status, time }
+    // ====== CONFIG (AWS/EC2) ======
+    const SERVER      = "http://ec2-3-230-143-202.compute-1.amazonaws.com:9990";
+    const THERMAL_URL = SERVER + "/thermal";
+    const TEMP_URL    = SERVER + "/current_temp"; // returns { avg, status, time }
 
     // ====== RIGHT COLUMN: refresh image every 1s ======
     const thermalImg = document.getElementById('thermalImage');
@@ -155,7 +151,7 @@
     const tempNote = document.getElementById('tempNote');
 
     const ctx = document.getElementById('tempChart').getContext('2d');
-    const maxPoints = 300; // keep last ~10 min @ 2s interval
+    const maxPoints = 300; // keep last points
 
     const tempChart = new Chart(ctx, {
       type: 'line',
@@ -184,15 +180,20 @@
     });
 
     let lastTemp = null;
+
     async function pollTemperature() {
       try {
         const res = await fetch(TEMP_URL + "?ts=" + Date.now(), { cache: "no-store" });
         if (!res.ok) throw new Error(res.status + " " + res.statusText);
         const data = await res.json();
 
+        // ✅ ONLY CHANGE: extract correct field from your AWS JSON => "avg"
+        const tempField = (typeof data.avg === "number") ? data.avg :
+                          (typeof data.avg_temp === "number") ? data.avg_temp : null;
+
         // Update number
-        if (typeof data.avg === "number") {
-          tempVal.textContent = data.avg.toFixed(1) + " °C";
+        if (typeof tempField === "number") {
+          tempVal.textContent = tempField.toFixed(1) + " °C";
           tempNote.textContent = "updated " + (data.time || "");
         } else if (data.status === "no_frame") {
           tempVal.textContent = "-- °C";
@@ -203,21 +204,25 @@
         }
 
         // Update chart
-        if (typeof data.avg === "number") {
-          const currentTemp = Number(data.avg);
+        if (typeof tempField === "number") {
+          const currentTemp = Number(tempField);
           const label = data.time || new Date().toLocaleTimeString();
-          tempChart.data.labels.push(label);
-           if (lastTemp !== null && Math.abs(currentTemp - lastTemp) > 5) {
+
+          // (Your existing spike rule)
+          if (lastTemp !== null && Math.abs(currentTemp - lastTemp) > 5) {
             console.warn("Skipped sudden change:", currentTemp);
             tempNote.textContent = "Skipped sudden change";
             return; // ⛔ Skip updating chart
           }
-          //tempChart.data.labels.push(label); ---acting as to match data rendering - Alhamdulillah, Laa ilaaha ilallah
-          tempChart.data.datasets[0].data.push(Number(data.avg));
+
+          tempChart.data.labels.push(label);
+          tempChart.data.datasets[0].data.push(currentTemp);
+
           if (tempChart.data.labels.length > maxPoints) {
             tempChart.data.labels.shift();
             tempChart.data.datasets[0].data.shift();
           }
+
           tempChart.update('none');
           lastTemp = currentTemp;
         }
@@ -227,13 +232,9 @@
       }
     }
 
-    // Poll every 2 seconds for smooth chart & low load
+    // Poll every 1 second (your original behavior)
     pollTemperature();
-    setInterval(pollTemperature, 1000); //each 60 seconds
-
-    // If you ever want to set these dynamically:
-    // document.getElementById('btnBack').href = './index.html';
-    // document.getElementById('btnFullView').href = './thermal_camera.html';
+    setInterval(pollTemperature, 1000);
   </script>
 </body>
 </html>

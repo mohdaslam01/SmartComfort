@@ -22,11 +22,11 @@
     </style>
 </head>
 <body>
-    <img src="http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:9990/thermal" alt="Thermal Stream" id="thermalImage">
+    <img src="http://ec2-3-230-143-202.compute-1.amazonaws.com:9990/thermal" alt="Thermal Stream" id="thermalImage">
     <script>
         setInterval(() => {
             const img = document.getElementById('thermalImage');
-            img.src = "http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:9990/thermal?" + new Date().getTime();
+            img.src = "http://ec2-3-230-143-202.compute-1.amazonaws.com:9990/thermal?" + new Date().getTime();
         }, 1000); // refresh every second
     </script> //Laa ilaaha ilallah
 </body>

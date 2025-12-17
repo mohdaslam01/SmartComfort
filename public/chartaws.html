@@ -33,7 +33,7 @@
   <!-- Pin a specific Chart.js version in production (host yourself + SRI if possible) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <script>
-    const API_URL = 'http://ec2-3-141-169-209.us-east-2.compute.amazonaws.com:7000/sensor-data'; // consider HTTPS + same-origin in prod
+    const API_URL = 'http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/sensor-data'; // consider HTTPS + same-origin in prod
     const ctx = document.getElementById('sensorChart').getContext('2d');
     const statusEl = document.getElementById('status');
     const MAX_POINTS = 20;
