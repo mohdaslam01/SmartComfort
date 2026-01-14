@@ -175,7 +175,7 @@
         async function fetchData() {
           try {
             // const check = await fetchWithFallback(endpoints);
-            const response = await fetch('http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/sensor-data');
+            const response = await fetch('http://3.223.177.45:7000/sensor-data');
             const data = await response.json();
 
             let html = `

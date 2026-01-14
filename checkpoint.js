@@ -1,6 +1,6 @@
 const endpoints = [
   'http://10.196.133.61:5000/sensor-data',   // Place N
-  'http://ec2-3-230-143-202.compute-1.amazonaws.com:7000/sensor-data'     // Place M
+  'http://3.223.177.45:7000/sensor-data'     // Place M
 ];
 
 async function fetchWithFallback(urls) {
