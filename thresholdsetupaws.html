@@ -243,7 +243,7 @@
   
     async function fetchData() {
         try {
-            const response = await fetch('http://3.223.177.45:7000/sensor-data'); //http://10.196.133.61:5000/sensor-data
+            const response = await fetch('http://3.223.177.45:8814/sensor-data'); //http://10.196.133.61:5000/sensor-data
             const data = await response.json();
             return {
                 temperature: parseFloat(data.temperature),

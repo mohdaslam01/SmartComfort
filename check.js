@@ -26,7 +26,7 @@ async function main() {
   console.log("✅ Active endpoint:", check);
 
   // ✅ If the working endpoint is your AWS link
-  if (check === "http://3.223.177.45:7000/sensor-data") {
+  if (check === "http://3.223.177.45:8814/sensor-data") {
     // 👉 Replace 'yourpage.html' below with your target HTML page
     window.location.href = "indexaws.html";
   }
